@@ -1,18 +1,27 @@
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.responses import RedirectResponse
+from jose import jwt, JWTError
 from bson import ObjectId
+from .auth import SECRET_KEY, ALGORITHM
 from .db import db
-from starlette.responses import RedirectResponse
 
-def get_current_user(x_user_id: str = Header(alias="X-User-Id")) -> dict:
-    """開発中はヘッダで擬似ログイン。後でJWTに差し替え"""
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+def get_current_user(token: str = Depends(oauth2_scheme)) -> dict:
+    """JWTトークンを検証してユーザーを取得"""
     try:
-        oid = ObjectId(x_user_id)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid X-User-Id")
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token payload")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
-    user = db.users.find_one({"_id": oid})
+    user = db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
     return user
 
 def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
