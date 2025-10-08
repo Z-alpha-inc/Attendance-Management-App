@@ -1,5 +1,5 @@
 # app/main.py
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Query
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
@@ -9,12 +9,13 @@ from .db import db, ensure_indexes
 from .schemas import UserCreate, UserUpdate, UserOut
 from dotenv import load_dotenv
 import bcrypt
+from fastapi.responses import JSONResponse
 from typing import Optional
 from .admin_router import admin
 from .deps import get_current_user, require_admin  #（一般APIや管理者APIで使いたい場合）
-from .db import ensure_indexes
 from .auth import create_access_token
 import os
+import re
 
 load_dotenv()
 
@@ -84,18 +85,9 @@ def create_user(payload: UserCreate):
     }
 
 
-# ユーザー一覧取得（管理者専用）
-@app.get("/users")
-def list_users():
-    users = list(db.users.find().sort("createdAt", -1))
-    return [serialize_user(u) for u in users]
 
-app.include_router(admin)
+app.include_router(admin)  # 管理者用ルーターを追加
 
-@app.get("/admin")
-def admin_dashboard(current_user: dict = Depends(require_admin)):
-    """管理者専用ページ"""
-    return {"message": f"ようこそ管理者 {current_user['name']} さん"}
 
 # 自分の情報を取得
 @app.get("/me")
@@ -190,35 +182,46 @@ def clock_out(current_user: dict = Depends(get_current_user)):
 
 #自分の勤怠一覧取得
 @app.get("/me/attendance")
-def my_attendance_summary(month: Optional[str] = None, current_user: dict = Depends(get_current_user)):
-    """当月の日別勤務時間と合計を返す"""
-    uid = current_user["_id"]
+def my_attendance_summary(
+    month: Optional[str] = Query(default=None, description="YYYY-MM（未指定ならJSTの今月）")
+    , current_user: dict = Depends(get_current_user)
+):
+    """
+    本人用：指定月（または今月）の日別勤務時間と合計を返す（スキーマ非使用版）
+    返り値は素の dict。workedMinutes が None（退勤前）の日は 0 として扱う。
+    """
+    # 月の決定（未指定なら今月）
     if not month:
         month = datetime.now(JST).strftime("%Y-%m")
 
-    # "2025-10-" のように前方一致検索
-    docs = list(db.attendance.find(
-        {"user_id": uid, "date_key": {"$regex": f"^{month}-"}}
-    ).sort("date_key", 1))
+    # 超簡易バリデーション（YYYY-MM）
+    if not re.fullmatch(r"\d{4}-\d{2}", month):
+        raise HTTPException(status_code=400, detail="month は 'YYYY-MM' 形式で指定してください")
 
-    # 日別リストを作成
+    # その月の本人データを取得（date_key は JST の 'YYYY-MM-DD'）
+    cursor = db.attendance.find(
+        {"user_id": current_user["_id"], "date_key": {"$regex": f"^{month}-"}}
+    ).sort("date_key", 1)
+
     records = []
     total_minutes = 0
-    for d in docs:
-        worked = d.get("workedMinutes") or 0
-        total_minutes += worked
+
+    for d in cursor:
+        minutes = int(d.get("workedMinutes") or 0)
+        total_minutes += minutes
         records.append({
             "date": d["date_key"],
-            "workedMinutes": worked,
-            "workedHours": round(worked / 60, 2)
+            "workedMinutes": minutes,
+            "workedHours": round(minutes / 60, 2),
         })
 
     return {
         "month": month,
         "totalMinutes": total_minutes,
         "totalHours": round(total_minutes / 60, 2),
-        "records": records
+        "records": records,
     }
+
 
 #ログイン機能
 @app.post("/login")
@@ -231,10 +234,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
     token = create_access_token({"sub": str(user["_id"])})
     return {"access_token": token, "token_type": "bearer"}
 
-# app/main.py または auth.py
-from fastapi import Depends
-from fastapi.responses import JSONResponse
-from .deps import get_current_user
+
 
 #ログアウト機能（フロント側でトークンを削除するだけ）
 @app.post("/logout")

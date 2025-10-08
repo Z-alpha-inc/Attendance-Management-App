@@ -19,6 +19,7 @@ def list_users():
         u["id"] = str(u.pop("_id"))
     return users
 
+
 # 特定ユーザーの当月勤怠一覧取得（管理者専用）
 @admin.get("/users/{user_id}/attendance")
 def user_month_attendance(user_id: str, month: str):
@@ -32,3 +33,4 @@ def user_month_attendance(user_id: str, month: str):
         d["id"] = str(d.pop("_id"))
         d["user_id"] = str(d["user_id"])
     return docs
+
