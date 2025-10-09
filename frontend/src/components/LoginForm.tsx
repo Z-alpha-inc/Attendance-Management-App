@@ -31,7 +31,7 @@ const LoginForm = ({ onLoginSuccess }) => {
         const formBody = new URLSearchParams(details).toString();
         
         try {
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            const response = await fetch(`${API_BASE_URL}/login`, {
                 method: 'POST',
                 headers: { 
                     // FastAPIの認証形式に合わせる
