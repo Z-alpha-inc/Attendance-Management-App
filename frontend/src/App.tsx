@@ -4,6 +4,7 @@ import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
 import HomePage from "./pages/HomePage";
 import UserAttendanceEdit from "./pages/UserAttendanceEdit";
+import ProtectedRoute from "./components/ProtectedRoutes";
 
 function App() {
   return (
@@ -17,11 +18,27 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
 
         {/* URLが "/dashboard" の場合にDashboardPageを表示 */}
-        <Route path="/dashboard" element={<DashboardPage />} />
 
         {/* URLが "/admin" の場合にAdminPageを表示 */}
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/attendance/edit/:id" element={<UserAttendanceEdit />} />
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          } 
+        />
+
+        {/* 出勤編集ページもログイン必須 */}
+        <Route 
+          path="/attendance/edit/:id" 
+          element={
+            <ProtectedRoute>
+              <UserAttendanceEdit />
+            </ProtectedRoute>
+          } 
+        />
       </Routes>
     </BrowserRouter>
   );
