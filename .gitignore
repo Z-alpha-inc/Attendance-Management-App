@@ -1,2 +1,7 @@
 .env
-backend/service-account.json
+backend/service-account.jsonnode_modules/
+*.pyc
+node_modules/
+*.pyc
+node_modules/
+*.pyc

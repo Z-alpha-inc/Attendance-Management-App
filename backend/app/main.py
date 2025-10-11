@@ -16,10 +16,24 @@ from .deps import get_current_user, require_admin  #（一般APIや管理者API�
 from .auth import create_access_token
 import os
 import re
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
 app = FastAPI(title="Attendance API")
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:5173", 
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 JST = ZoneInfo("Asia/Tokyo")
 def today_key(): return datetime.now(JST).strftime("%Y-%m-%d")
