@@ -24,6 +24,7 @@ const ClockingButtons = ({ isClockedIn, authorizedFetch, onActionSuccess, setFla
             const data = await authorizedFetch('/me/clock-in', 'POST'); 
             
             setFlashMessage({ type: 'success', text: data.message || '出勤打刻が完了しました！' });
+            onActionSuccess(); // ← ここで fetchStatus が呼ばれる
         } catch (error) {
             setFlashMessage({ type: 'error', text: error.message || '出勤打刻に失敗しました。' });
             console.error('Clock In Error:', error);

@@ -3,6 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
 import HomePage from "./pages/HomePage";
+import UserAttendanceEdit from "./pages/UserAttendanceEdit";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
 
         {/* URLが "/admin" の場合にAdminPageを表示 */}
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/attendance/edit/:id" element={<UserAttendanceEdit />} />
       </Routes>
     </BrowserRouter>
   );

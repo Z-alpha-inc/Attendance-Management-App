@@ -15,7 +15,7 @@ const LoginPage = () => {
         console.log('ログイン成功！', { token, role });
 
         // 2. 受け取ったトークンを保存する (例: localStorage)
-        localStorage.setItem('accessToken', token);
+        localStorage.setItem('access_token', token);
 
         // 3. ダッシュボードページへ遷移させる
         navigate('/dashboard');
