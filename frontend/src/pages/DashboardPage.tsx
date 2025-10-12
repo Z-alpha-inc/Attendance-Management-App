@@ -4,7 +4,8 @@ import ClockingButtons from '../components/ClockingButtons';
 import Timer from '../components/Timer';
 import TodayAttendanceHistory from '../components/TodayAttendanceHistory';
 import MonthlyAttendance from '../components/MonthlyAttendance';
-
+import LogoutButton from "../components/LogoutButton";
+import Header from '../components/Headear';
 type AttendanceRecord = {
   id: string;
   clockIn: string;
@@ -86,6 +87,7 @@ const authorizedFetch = async (url: string, method: string) => {
 )}
   <MonthlyAttendance authorizedFetch={authorizedFetch} />
   <TodayAttendanceHistory authorizedFetch={authorizedFetch} />
+  <LogoutButton />
 
       
     </div>

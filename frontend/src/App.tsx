@@ -4,7 +4,10 @@ import DashboardPage from "./pages/DashboardPage";
 import AdminPage from "./pages/AdminPage";
 import HomePage from "./pages/HomePage";
 import UserAttendanceEdit from "./pages/UserAttendanceEdit";
-import ProtectedRoute from "./components/ProtectedRoutes";
+import ProtectedEmployeeRoutes from "./components/ProtectedEmployeeRoutes";
+import AdminShow from "./pages/AdminShowPage";
+import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
+import TimeShow from "./pages/TimeShowPage";
 
 function App() {
   return (
@@ -20,13 +23,28 @@ function App() {
         {/* URLが "/dashboard" の場合にDashboardPageを表示 */}
 
         {/* URLが "/admin" の場合にAdminPageを表示 */}
-        <Route path="/admin" element={<AdminPage />} />
+       <Route 
+          path="/AdminShow" 
+          element={
+            <ProtectedAdminRoute>
+              <AdminShow/>
+            </ProtectedAdminRoute>
+          } 
+        />
+        <Route 
+          path="/admin/attendance/:user_id" 
+          element={
+            <ProtectedAdminRoute>
+              <TimeShow/>
+            </ProtectedAdminRoute>
+          } 
+        />
         <Route 
           path="/dashboard" 
           element={
-            <ProtectedRoute>
+            <ProtectedEmployeeRoutes>
               <DashboardPage />
-            </ProtectedRoute>
+            </ProtectedEmployeeRoutes>
           } 
         />
 
@@ -34,9 +52,9 @@ function App() {
         <Route 
           path="/attendance/edit/:id" 
           element={
-            <ProtectedRoute>
+            <ProtectedEmployeeRoutes>
               <UserAttendanceEdit />
-            </ProtectedRoute>
+            </ProtectedEmployeeRoutes>
           } 
         />
       </Routes>
