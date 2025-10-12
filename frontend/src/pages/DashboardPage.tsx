@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import ClockingButtons from '../components/ClockingButtons';
-import Timer from '../components/Timer';
-import TodayAttendanceHistory from '../components/TodayAttendanceHistory';
-import MonthlyAttendance from '../components/MonthlyAttendance';
-import LogoutButton from "../components/LogoutButton";
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Headear';
+import Timer from '../components/Timer';
+import ClockingButtons from '../components/ClockingButtons';
+import MonthlyAttendance from '../components/MonthlyAttendance';
+import TodayAttendanceHistory from '../components/TodayAttendanceHistory';
+
+// This is a placeholder type. Make sure it matches your actual data structure.
 type AttendanceRecord = {
   id: string;
   clockIn: string;
@@ -13,85 +13,139 @@ type AttendanceRecord = {
 };
 
 function DashboardPage() {
-  const [flashMessage, setFlashMessage] = useState<{ type: string, text: string } | null>(null); // ←追加
+  const [flashMessage, setFlashMessage] = useState<{ type: string, text: string } | null>(null);
   const [status, setStatus] = useState<string>('not_clocked_in');
-  const token = localStorage.getItem('access_token');
-
-  const todayRecords: AttendanceRecord[] = [
-    { id: '1', clockIn: '09:00', clockOut: '18:00' },
-    { id: '2', clockIn: '13:00', clockOut: null },
-  ];
-
-  const pageStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '20px',
-    minHeight: '100vh',
-  };
-
   const apiUrl = import.meta.env.VITE_API_URL;
 
-const authorizedFetch = async (url: string, method: string) => {
-  const token = localStorage.getItem('access_token'); // ←ここで毎回取得
-  if (!token) throw new Error("Token not found. Please login.");
+  // Reusable function for making authorized API calls
+  const authorizedFetch = async (url: string, method: string) => {
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      // In a real app, you might redirect to login here
+      throw new Error("Token not found. Please login.");
+    }
 
-  const res = await fetch(`${apiUrl}${url}`, {
-    method,
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
+    const res = await fetch(`${apiUrl}${url}`, {
+      method,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!res.ok) throw new Error(await res.text());
-  return await res.json();
-};
+    if (!res.ok) {
+      // Try to parse error message from server, otherwise use default
+      const errorData = await res.json().catch(() => ({ detail: 'An unknown error occurred' }));
+      throw new Error(errorData.detail || 'Request failed');
+    }
+    return res.json();
+  };
 
-  // 出勤状態を取得する関数
+  // Function to get the user's current clock-in status
   const fetchStatus = async () => {
     try {
       const data = await authorizedFetch('/me/status', 'GET');
       setStatus(data.status);
     } catch (e) {
+      console.error("Failed to fetch status:", e);
       setStatus('error');
     }
   };
 
-  // 初回マウント時にも状態取得したい場合
-  React.useEffect(() => {
+  // Fetch status when the component first loads
+  useEffect(() => {
     fetchStatus();
   }, []);
 
-
   return (
-    <div style={pageStyle}>
-      <h1>勤怠ダッシュボード</h1> 
+    <div style={styles.pageContainer}>
+      <Header title="打刻画面" />
       
-      <div style={{ marginBottom: '30px', textAlign: 'center' }}>
-        <Timer />
-        {/* setFlashMessage を渡す */}
-       <ClockingButtons
-        isClockedIn={status === 'working'}
-        authorizedFetch={authorizedFetch}
-        onActionSuccess={fetchStatus} // 打刻成功時に状態再取得
-        setFlashMessage={setFlashMessage}
-      />
+      {/* This wrapper centers the main content on the page */}
+      <div style={styles.contentWrapper}>
+
+        {/* Section for Timer and Buttons, kept centered */}
+        <div style={styles.topSection}>
+          <Timer />
+          <ClockingButtons
+            isClockedIn={status === 'working'}
+            authorizedFetch={authorizedFetch}
+            onActionSuccess={fetchStatus} // Re-fetch status after a successful action
+            setFlashMessage={setFlashMessage}
+          />
+        </div>
+
+        {/* Displays success or error messages */}
+        {flashMessage && (
+          <p style={styles.flashMessage(flashMessage.type)}>
+            {flashMessage.text}
+          </p>
+        )}
+
+        {/* These components will now use the full width of the contentWrapper */}
+        <div style={styles.attendanceSection}>
+          <div style={styles.attendanceItem}>
+            <MonthlyAttendance authorizedFetch={authorizedFetch} />
+          </div>
+          <div style={styles.attendanceItem}>
+            <TodayAttendanceHistory authorizedFetch={authorizedFetch} />
+          </div>
+        </div>
+        
       </div>
-
-      {/* 簡易的にメッセージ表示 */}
-      {flashMessage && (
-  <p style={{ color: flashMessage.type === 'error' ? 'red' : 'green' }}>
-    {flashMessage.text}
-  </p>
-)}
-  <MonthlyAttendance authorizedFetch={authorizedFetch} />
-  <TodayAttendanceHistory authorizedFetch={authorizedFetch} />
-  <LogoutButton />
-
-      
     </div>
   );
 }
 
-export default DashboardPage;
+
+
+// --- Styles ---
+// We define styles here to keep the JSX clean.
+
+const styles = {
+  // The main container for the entire page
+  pageContainer: {
+    width: '100%',
+  },
+  // A wrapper for the main content area to control its width and centering
+  contentWrapper: {
+    maxWidth: '900px', // Sets a max width for content, preventing it from being too wide on large screens
+    width: '90-0%',      // Ensures it's responsive on smaller screens
+    margin: '0 auto',  // The key to centering the block on the page
+    padding: '20px',   // Adds some space inside the content area
+  },
+  // Styles for the top section containing the timer and buttons
+  topSection: {
+    marginBottom: '30px',
+    textAlign: 'center' as 'center',
+  },
+  // A function to return styles for the flash message based on its type (error or success)
+  flashMessage: (type: string) => ({
+    color: type === 'error' ? '#D32F2F' : '#388E3C', // Red for error, green for success
+    backgroundColor: type === 'error' ? '#FFEBEE' : '#E8F5E9',
+    textAlign: 'center' as 'center',
+    padding: '10px',
+    borderRadius: '4px',
+    marginBottom: '20px',
+  }),
+    attendanceSection: {
+    display: 'flex',
+    justifyContent: 'space-between', // 左右に配置
+    alignItems: 'flex-start',        // 上揃え
+    gap: '20px',                     // コンポーネント間の隙間
+    flexWrap: 'wrap',                // 画面が狭いときは縦に折り返す
+    marginTop: '30px',
+  },
+  attendanceItem: {
+    flex: '1',                       // 均等幅
+    minWidth: '350px',               // 狭すぎないよう最低幅
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '8px',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  },
+
+};
+
+
+export default DashboardPage;        
