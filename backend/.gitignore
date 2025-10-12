@@ -1,0 +1,4 @@
+.env
+# Python キャッシュ
+__pycache__/
+*.py[cod]

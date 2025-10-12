@@ -1,15 +1,19 @@
-import React from 'react'; 
-import LoginForm from '../components/LoginForm'; 
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import LoginForm from '../components/LoginForm';
 
-function LoginPage() {
-  return (
-    <div>
-      <h1>ログインページ</h1>
-      <LoginForm />
-    </div>
-  );
-}
+const LoginPage = () => {
+    // 1. useNavigateフックを準備
 
+    
+    return (
+        <div>
+            <h1>勤怠管理アプリへようこそ</h1>
+            
+            {/* 4. LoginFormを配置し、onLoginSuccessに関数を渡す */}
+            <LoginForm  />
+        </div>
+    );
+};
 
-// ↓ この行を忘れないようにしてください
 export default LoginPage;

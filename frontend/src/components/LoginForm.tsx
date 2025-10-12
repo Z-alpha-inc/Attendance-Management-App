@@ -1,146 +1,101 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-// FastAPIのURLを定義 (FastAPIサーバーが稼働しているアドレスに合わせて変更してください)
-const API_BASE_URL = 'http://localhost:8000'; 
+const API_BASE_URL = 'http://localhost:8000'; // FastAPI の URL
 
-/**
- * ログインフォームコンポーネント
- * @param {function} onLoginSuccess - ログイン成功時に呼び出されるコールバック (token, role)
- */
-const LoginForm = ({ onLoginSuccess }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
+const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-    /**
-     * フォームの送信処理 (FastAPIの /auth/login APIを呼び出す)
-     */
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-        const details = {
-            // FastAPIのOAuth2PasswordRequestFormは 'username' を要求するため、emailをここにマッピング
-            'username': email,
-            'password': password
-        };
+    try {
+      const formData = new URLSearchParams({
+        username: email,
+        password,
+      }).toString();
 
-        // FastAPIが要求する application/x-www-form-urlencoded 形式にデータを変換
-        const formBody = new URLSearchParams(details).toString();
-        
-        try {
-            const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 
-                    // FastAPIの認証形式に合わせる
-                    'Content-Type': 'application/x-www-form-urlencoded' 
-                },
-                body: formBody,
-            });
+      const res = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData,
+      });
 
-            const data = await response.json();
+      const data = await res.json();
 
-            if (response.ok) {
-                // 認証成功: 親コンポーネントにトークンとロールを渡す
-                onLoginSuccess(data.access_token, data.role); 
+      if (!res.ok) {
+        setError(data.detail || 'ログインに失敗しました');
+        setLoading(false);
+        return;
+      }
 
-            } else {
-                // FastAPIから返されたエラーメッセージ
-                setError(data.detail || 'ログインに失敗しました。サーバーエラーを確認してください。');
-            }
+      // role が未設定ならログイン失敗
+      if (!data.role) {
+        setError('アカウント情報に問題があります。管理者に問い合わせてください。');
+        setLoading(false);
+        return;
+      }
 
-        } catch (err) {
-            setError('ネットワークエラーが発生しました。サーバーが起動しているか確認してください。');
-            console.error('API連携エラー:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+      // 成功時：localStorageに保存
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('role', data.role);
 
-    // UI Styles
-    const styles = {
-        formContainer: {
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '15px',
-            padding: '20px',
-            border: '1px solid #ccc',
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            backgroundColor: '#fff',
-        },
-        header: {
-            marginBottom: '10px',
-            textAlign: 'center',
-            color: '#333'
-        },
-        inputField: {
-            padding: '12px',
-            borderRadius: '5px',
-            border: '1px solid #ddd',
-            fontSize: '16px',
-        },
-        submitButton: {
-            padding: '12px',
-            borderRadius: '5px',
-            border: 'none',
-            backgroundColor: '#007bff',
-            color: 'white',
-            fontSize: '16px',
-            cursor: 'pointer',
-            transition: 'background-color 0.3s',
-        },
-        errorText: {
-            color: '#d9534f',
-            backgroundColor: '#f2dede',
-            padding: '10px',
-            borderRadius: '4px',
-            textAlign: 'center',
-            fontSize: '14px',
-        },
-    };
+      // role に応じて遷移先を分ける
+      if (data.role === 'admin') {
+        navigate('/AdminShow');
+      } else if (data.role === 'employee') {
+        navigate('/dashboard');
+      } else {
+        setError('不明なユーザーロールです');
+      }
 
-    return (
-        <form onSubmit={handleLogin} style={styles.formContainer}>
-            <h2 style={styles.header}>ログイン</h2>
-            
-            {/* エラーメッセージ */}
-            {error && <p style={styles.errorText}>{error}</p>}
-            
-            {/* メールアドレス入力 */}
-            <input 
-                type="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                placeholder="メールアドレス" 
-                required 
-                disabled={loading}
-                style={styles.inputField}
-            />
-            
-            {/* パスワード入力 */}
-            <input 
-                type="password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                placeholder="パスワード" 
-                required 
-                disabled={loading}
-                style={styles.inputField}
-            />
-            
-            {/* ログインボタン */}
-            <button 
-                type="submit" 
-                disabled={loading}
-                style={styles.submitButton}
-            >
-                {loading ? '処理中...' : 'ログイン'}
-            </button>
-        </form>
-    );
+    } catch (err) {
+      console.error(err);
+      setError('サーバーに接続できません。起動しているか確認してください。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>ログイン</h2>
+        {error && <div style={{ color: 'red', marginBottom: '10px', textAlign: 'center' }}>{error}</div>}
+      <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <input
+          type="email"
+          placeholder="メールアドレス"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          disabled={loading}
+          style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+        />
+        <input
+          type="password"
+          placeholder="パスワード"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          disabled={loading}
+          style={{ padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+        />
+        <button
+          type="submit"
+          disabled={loading}
+          style={{ padding: '10px', borderRadius: '4px', border: 'none', backgroundColor: '#007bff', color: 'white', cursor: 'pointer' }}
+        >
+          {loading ? 'ログイン中...' : 'ログイン'}
+        </button>
+      </form>
+    </div>
+  );
 };
 
-export default LoginForm;
+export default LoginPage;

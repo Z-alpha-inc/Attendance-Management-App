@@ -32,5 +32,6 @@ def user_month_attendance(user_id: str, month: str):
     for d in docs:
         d["id"] = str(d.pop("_id"))
         d["user_id"] = str(d["user_id"])
+        d["lastModifiedBy"] = str(d["lastModifiedBy"])
     return docs
 
