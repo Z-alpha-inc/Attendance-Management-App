@@ -23,6 +23,7 @@ const TodayAttendanceHistory: React.FC<Props> = ({ authorizedFetch }) => {
     setError(null);
     try {
       const res = await authorizedFetch('/me/status', 'GET');
+      
       console.log("今日の勤怠:", res);
       setRecord(res);
     } catch (err: any) {

@@ -14,7 +14,7 @@ const UserList: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const navigate = useNavigate(); // ✅ React Router v6 以降のフック
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -44,7 +44,6 @@ const UserList: React.FC = () => {
   }, []);
 
   const handleViewAttendance = (userId: string) => {
-    // 勤怠ページへ遷移（例: /admin/attendance/:userId）
     navigate(`/admin/attendance/${userId}`);
   };
 
@@ -61,7 +60,7 @@ const UserList: React.FC = () => {
             <th>名前</th>
             <th>メール</th>
             <th>役割</th>
-            <th>勤怠確認</th> {/* ✅ 新しい欄 */}
+            <th>勤怠確認</th> 
           </tr>
         </thead>
         <tbody>

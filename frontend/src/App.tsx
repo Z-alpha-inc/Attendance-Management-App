@@ -9,68 +9,53 @@ import AdminShow from "./pages/AdminShowPage";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 import TimeShow from "./pages/TimeShowPage";
 import ProtectedRoute from "./components/ProtectedEmployeeRoutes";
-
+import SignUpPage from "./pages/SignUpPage";
 function App() {
   return (
     <div style={styles.appContainer}>
-    <main style={styles.mainContent}>
-        <BrowserRouter>
-       
-          <Routes>
-           
-            {/* "/" にアクセスしたら "/route" に自動で移動する */}
-           <Route path="/" element={<Navigate to="/login" replace />} />
+      <main style={styles.mainContent}>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Navigate to="/login" replace />} />      
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/AdminShow" element={
+                <ProtectedAdminRoute>
+                  <AdminShow />
+                </ProtectedAdminRoute>
+              } />
+          
+              <Route 
+                path="/admin/attendance/:user_id" 
+                element={
+                  <ProtectedAdminRoute>
+                    <TimeShow/>
+                  </ProtectedAdminRoute>
+                } 
+              />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedEmployeeRoutes>
+                    <DashboardPage />
+                  </ProtectedEmployeeRoutes>
+                } 
+              />
 
-
-        {/* URLが "/login" の場合にLoginPageを表示 */}
-        <Route path="/login" element={<LoginPage />} />
-
-        {/* URLが "/dashboard" の場合にDashboardPageを表示 */}
-
-        {/* URLが "/admin" の場合にAdminPageを表示 */}
-       <Route 
-          path="/AdminShow" 
-          element={
-            <ProtectedAdminRoute>
-              <AdminShow/>
-            </ProtectedAdminRoute>
-          } 
-        />
-        <Route 
-          path="/admin/attendance/:user_id" 
-          element={
-            <ProtectedAdminRoute>
-              <TimeShow/>
-            </ProtectedAdminRoute>
-          } 
-        />
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedEmployeeRoutes>
-              <DashboardPage />
-            </ProtectedEmployeeRoutes>
-          } 
-        />
-
-        {/* 出勤編集ページもログイン必須 */}
-        <Route 
-          path="/attendance/edit/:id" 
-          element={
-            <ProtectedEmployeeRoutes>
-              <UserAttendanceEdit />
-            </ProtectedEmployeeRoutes>
-          } 
-        />
-        <Route path="*" element={<Navigate to="/login" replace />} />
         
-      </Routes>
-      
-    </BrowserRouter>
-    </main>
+              <Route 
+                path="/attendance/edit/:id" 
+                element={
+                  <ProtectedEmployeeRoutes>
+                    <UserAttendanceEdit />
+                  </ProtectedEmployeeRoutes>
+                } 
+              />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </main>
     </div>
-
-
   );
 }
 

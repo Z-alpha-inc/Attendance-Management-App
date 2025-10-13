@@ -5,13 +5,8 @@ const LogoutButton: React.FC = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // トークン削除
     localStorage.removeItem("access_token");
     localStorage.removeItem("user_role");
-
-    // 任意で状態リセット処理などもここに追加可能
-
-    // ログインページへリダイレクト
     navigate("/login");
   };
 
