@@ -8,17 +8,31 @@ import ProtectedEmployeeRoutes from "./components/ProtectedEmployeeRoutes";
 import AdminShow from "./pages/AdminShowPage";
 import ProtectedAdminRoute from "./components/ProtectedAdminRoute";
 import TimeShow from "./pages/TimeShowPage";
-import ProtectedRoute from "./components/ProtectedEmployeeRoutes";
 import SignUpPage from "./pages/SignUpPage";
+import ProtectedRegisterRoute from "./components/ProtectedRegisterRoute";
+
 function App() {
   return (
     <div style={styles.appContainer}>
       <main style={styles.mainContent}>
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Navigate to="/login" replace />} />      
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignUpPage />} />
+              <Route path="/" element={
+                <ProtectedRegisterRoute>
+                  <Navigate to="/login" replace />
+                </ProtectedRegisterRoute>
+              } />
+              <Route path="/login" element={
+                <ProtectedRegisterRoute>
+                  <LoginPage />
+                </ProtectedRegisterRoute>
+              } />
+              <Route path="/signup" element={
+                <ProtectedRegisterRoute>
+                  <SignUpPage />
+                </ProtectedRegisterRoute>
+              } />
+
               <Route path="/AdminShow" element={
                 <ProtectedAdminRoute>
                   <AdminShow />
@@ -41,8 +55,6 @@ function App() {
                   </ProtectedEmployeeRoutes>
                 } 
               />
-
-        
               <Route 
                 path="/attendance/edit/:id" 
                 element={

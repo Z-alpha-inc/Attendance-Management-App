@@ -10,17 +10,15 @@ const ProtectedRoute: React.FC<Props> = ({ children }) => {
   const role = localStorage.getItem("role");
 
   if (token) {
-   if (role == "employee") {
+    if (role === "employee") {
       return <Navigate to="/dashboard" replace />;
-    }
-
-    if (role == "admin") {
-      return <Navigate to="/dashboard" replace />;
-    }
-  }
-  if (role !== "employee") {
+    } else if (role === "admin") {
+      return <Navigate to="/AdminShow" replace />;
+    } else {
       return <Navigate to="/login" replace />;
     }
+  }
+
   return <>{children}</>;
 };
 
