@@ -3,10 +3,10 @@ import React from 'react';
 import Header from '../components/Headear';
 
 const UserEditAttendance = () => {
-  const { id } = useParams<{ id: string }>();  // URLの:id部分を取得
-  console.log(id); // 例: "123"
+  const { id } = useParams<{ id: string }>();  
+  console.log(id); 
 
-  // idを使ってAPIから勤怠データ取得
+ 
   return (
     <>
       <Header title="勤怠編集" />

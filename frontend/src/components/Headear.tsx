@@ -12,17 +12,12 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
 
   return (
     <header style={styles.header}>
-      {/* 左側: 戻るボタン */}
       <div style={styles.left}>
         <BackButton />
       </div>
-
-      {/* 中央: タイトル */}
       <div style={styles.center}>
         <h2 style={{ margin: 0 }}>{title}</h2>
       </div>
-
-      {/* 右側: ユーザー名 + ログアウト */}
       <div style={styles.right}>
         <span style={{ marginRight: "10px" }}>
           {loading ? "読み込み中..." : user?.name || "未ログイン"}

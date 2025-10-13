@@ -17,11 +17,10 @@ function DashboardPage() {
   const [status, setStatus] = useState<string>('not_clocked_in');
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  // Reusable function for making authorized API calls
+ 
   const authorizedFetch = async (url: string, method: string) => {
     const token = localStorage.getItem('access_token');
     if (!token) {
-      // In a real app, you might redirect to login here
       throw new Error("Token not found. Please login.");
     }
 
@@ -34,14 +33,12 @@ function DashboardPage() {
     });
 
     if (!res.ok) {
-      // Try to parse error message from server, otherwise use default
       const errorData = await res.json().catch(() => ({ detail: 'An unknown error occurred' }));
       throw new Error(errorData.detail || 'Request failed');
     }
     return res.json();
   };
 
-  // Function to get the user's current clock-in status
   const fetchStatus = async () => {
     try {
       const data = await authorizedFetch('/me/status', 'GET');
@@ -52,7 +49,7 @@ function DashboardPage() {
     }
   };
 
-  // Fetch status when the component first loads
+  
   useEffect(() => {
     fetchStatus();
   }, []);
@@ -61,28 +58,27 @@ function DashboardPage() {
     <div style={styles.pageContainer}>
       <Header title="打刻画面" />
       
-      {/* This wrapper centers the main content on the page */}
+    
       <div style={styles.contentWrapper}>
 
-        {/* Section for Timer and Buttons, kept centered */}
+       
         <div style={styles.topSection}>
           <Timer />
           <ClockingButtons
             isClockedIn={status === 'working'}
             authorizedFetch={authorizedFetch}
-            onActionSuccess={fetchStatus} // Re-fetch status after a successful action
+            onActionSuccess={fetchStatus} 
             setFlashMessage={setFlashMessage}
           />
         </div>
 
-        {/* Displays success or error messages */}
         {flashMessage && (
           <p style={styles.flashMessage(flashMessage.type)}>
             {flashMessage.text}
           </p>
         )}
 
-        {/* These components will now use the full width of the contentWrapper */}
+       
         <div style={styles.attendanceSection}>
           <div style={styles.attendanceItem}>
             <MonthlyAttendance authorizedFetch={authorizedFetch} />

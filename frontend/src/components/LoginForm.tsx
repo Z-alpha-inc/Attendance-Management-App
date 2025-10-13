@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 
 const API_BASE_URL = 'http://localhost:8000'; // FastAPI の URL
 
@@ -94,6 +94,12 @@ const LoginPage: React.FC = () => {
           {loading ? 'ログイン中...' : 'ログイン'}
         </button>
       </form>
+       <p style={{ marginTop: 10 }}>
+        アカウントをお持ちでない方は{" "}
+        <Link to="/signup" style={{ color: 'blue', textDecoration: 'underline' }}>
+          新規登録
+        </Link>
+      </p>
     </div>
   );
 };
