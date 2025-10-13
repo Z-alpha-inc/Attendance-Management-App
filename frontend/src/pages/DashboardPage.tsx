@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Header from '../components/Headear';
+import HeaderNoBack from '../components/HeaderNoBack';
 import Timer from '../components/Timer';
 import ClockingButtons from '../components/ClockingButtons';
 import MonthlyAttendance from '../components/MonthlyAttendance';
@@ -52,16 +52,13 @@ function DashboardPage() {
   
   useEffect(() => {
     fetchStatus();
+    
   }, []);
 
   return (
     <div style={styles.pageContainer}>
-      <Header title="打刻画面" />
-      
-    
+      <HeaderNoBack title="打刻画面" />
       <div style={styles.contentWrapper}>
-
-       
         <div style={styles.topSection}>
           <Timer />
           <ClockingButtons
@@ -71,14 +68,11 @@ function DashboardPage() {
             setFlashMessage={setFlashMessage}
           />
         </div>
-
         {flashMessage && (
           <p style={styles.flashMessage(flashMessage.type)}>
             {flashMessage.text}
           </p>
         )}
-
-       
         <div style={styles.attendanceSection}>
           <div style={styles.attendanceItem}>
             <MonthlyAttendance authorizedFetch={authorizedFetch} />
@@ -86,8 +80,7 @@ function DashboardPage() {
           <div style={styles.attendanceItem}>
             <TodayAttendanceHistory authorizedFetch={authorizedFetch} />
           </div>
-        </div>
-        
+        </div> 
       </div>
     </div>
   );

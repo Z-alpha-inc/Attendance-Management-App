@@ -7,12 +7,18 @@ interface Props {
 
 const ProtectedRoute: React.FC<Props> = ({ children }) => {
   const token = localStorage.getItem('access_token');
-  if (!token) {
-    // トークンがなければログインページにリダイレクト
-    return <Navigate to="/login" replace />;
+  const role = localStorage.getItem("role");
+
+  if (token) {
+    if (role === "employee") {
+      return <Navigate to="/dashboard" replace />;
+    } else if (role === "admin") {
+      return <Navigate to="/AdminShow" replace />;
+    } else {
+      return <Navigate to="/login" replace />;
+    }
   }
 
-  // トークンがあればそのまま表示
   return <>{children}</>;
 };
 

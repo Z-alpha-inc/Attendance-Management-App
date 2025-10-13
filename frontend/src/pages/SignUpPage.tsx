@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../components/Headear';
+import HeaderFront from '../components/HeaderFront';
+
 function SignUpPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [flashMessage, setFlashMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-
+  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
   const navigate = useNavigate();
+
+  const validate = () => {
+    const newErrors: typeof errors = {};
+
+    if (!name.trim()) newErrors.name = "名前を入力してください";
+    if (!email.includes("@")) newErrors.email = "有効なメールアドレスを入力してください";
+    if (password.length < 6) newErrors.password = "パスワードは6文字以上必要です";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0; // エラーなしなら true
+  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     setFlashMessage(null);
 
     try {
@@ -38,7 +51,7 @@ function SignUpPage() {
 
   return (
     <div style={{ maxWidth: 400, margin: '0 auto', padding: 20 }}>
-      <Header title="新規登録" />
+      <HeaderFront title="新規登録" />
 
       <form onSubmit={handleSignUp}>
         <div style={{ marginBottom: 10 }}>
@@ -50,6 +63,7 @@ function SignUpPage() {
             required
             style={{ width: '100%', padding: 8 }}
           />
+          {errors.name && <p style={{ color: "red" }}>{errors.name}</p>}
         </div>
 
         <div style={{ marginBottom: 10 }}>
@@ -61,6 +75,7 @@ function SignUpPage() {
             required
             style={{ width: '100%', padding: 8 }}
           />
+           {errors.email && <p style={{ color: "red" }}>{errors.email}</p>}
         </div>
 
         <div style={{ marginBottom: 10 }}>
@@ -72,6 +87,7 @@ function SignUpPage() {
             required
             style={{ width: '100%', padding: 8 }}
           />
+          {errors.password && <p style={{ color: "red" }}>{errors.password}</p>}
         </div>
 
         <button type="submit" style={{ padding: '10px 20px' }}>登録</button>

@@ -16,6 +16,7 @@ type MonthlyAttendanceResponse = {
 
 type Props = {
   authorizedFetch: (url: string, method: string) => Promise<any>;
+
 };
 
 const MonthlyAttendance: React.FC<Props> = ({ authorizedFetch }) => {
