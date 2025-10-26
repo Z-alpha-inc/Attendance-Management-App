@@ -12,7 +12,6 @@ export async function POST(req: Request) {
     const userId = new mongoose.Types.ObjectId(payload.sub);
     const date_key = todayKeyJST();
 
-    // 当日の open を取得
     const open = await Attendance.findOne({ user_id: userId, date_key, status: "open" });
     if (!open) {
       return NextResponse.json({ error: "No open record for today" }, { status: 400 });

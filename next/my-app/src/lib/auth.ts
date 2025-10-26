@@ -1,4 +1,3 @@
-// src/lib/auth.ts
 import type { NextRequest } from "next/server";
 import { verifyAccessToken } from "./jwt";
 

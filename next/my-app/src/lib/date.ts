@@ -1,4 +1,3 @@
-// src/lib/date.ts
 export function todayKeyJST(now = new Date()): string {
   const jst = new Date(now.getTime() + 9 * 60 * 60 * 1000); // UTC→JST
   const y = jst.getUTCFullYear();
