@@ -1,95 +1,36 @@
-# 稲田くん、岩本くん用 **1週間課題仕様書：Python＋FireBase『勤怠管理ミニアプリ』**
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## 0. 概要
+## Getting Started
 
-- **目的**: 社員/インターンの日々の出退勤を記録し、月次集計ができる最小機能の勤怠管理Webアプリを1週間で開発する。
-- **成果物**: 稼働するWebアプリ、ソースコード（Git管理）、FireBase(データベース)、README（セットアップ/実行方法、設計メモ、API仕様）、簡易ワイヤーフレーム、サンプルデータ。
-- **主な技術**: Python（Flask または FastAPI 推奨）、FireBase保存、HTML/CSS/JS（テンプレートはJinja2等）、任意でCSSフレームワーク（Bootstrap等）。
-- **タイムゾーン**: 既定は `Asia/Tokyo`（アプリ全体で統一）。
+First, run the development server:
 
-## 1. スコープ（MVP）
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-**1週間で“必ず”実装する最小機能**
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-1. **ユーザー管理（簡易）**
-    - ログイン/ログアウト（メール+パスワード）。
-    - ロール: `admin`, `employee`。
-2. **打刻（出勤/退勤）**
-    - 今日の**出勤**ボタン、**退勤**ボタン。
-    - 当日の打刻履歴の表示（社員本人のみ）。
-3. **日次/月次サマリー（本人向け）**
-    - 当月の**日別勤務時間**、合計勤務時間の表示。
-4. **管理画面（admin）**
-    - ユーザー一覧/検索。
-    - 指定ユーザーの当月勤怠一覧表示。
-5. **エクスポート**
-    - 管理者が**CSV**で当月勤怠をダウンロード。
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## 2. ユースケース / ユーザーストーリー
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-- **Employee**
-    - 自分のアカウントでログインできる。
-    - 出社時に「出勤」ボタン、退社時に「退勤」ボタンを押す。
-    - 誤打刻を**当日中のみ**自己修正（1回まで）できる（管理者は常時修正可）。
-    - 今月の勤務実績（日別、合計）を確認できる。
-- **Admin**
-    - すべてのユーザーの勤怠を検索・閲覧できる。
-    - 打刻の追加/修正/削除ができる（監査ログに残す）。
-    - 月次CSVを出力できる。
+## Learn More
 
-## 3. 画面要件（簡易ワイヤーフレーム）
+To learn more about Next.js, take a look at the following resources:
 
-- **A. ログイン**
-    - [メール][パスワード][ログイン]
-    - エラー表示（未入力/不一致）。
-- **B. ダッシュボード（Employee）**
-    - 今日の日付/状態表示（未打刻/出勤中/退勤済）。
-    - [出勤]/[退勤] ボタン（状態に応じて有効/無効切替）。
-    - 当日の打刻履歴（出勤時刻、退勤時刻、休憩等）。
-    - 当月サマリー: 日別表（日付/実働時間/備考）、合計時間。
-- **C. 管理画面（Admin）**
-    - ユーザー検索（名前/メール）。
-    - ユーザー詳細: 当月の一覧、行ごとに[編集][削除]。
-    - 月次CSV出力ボタン。
-- **共通UI**
-    - ヘッダー: タイトル、ユーザー名、[ログアウト]。
-    - フラッシュメッセージ（成功/失敗）。
-    - 入力フォームのバリデーションとエラーメッセージ。
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## 4. API/ルーティング設計（例: Flask）
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-- `POST /auth/login` ログイン
-- `POST /auth/logout` ログアウト
-- `GET /me` ログインユーザー情報
-- `POST /me/clock-in` 出勤打刻（当日）
-- `POST /me/clock-out` 退勤打刻（最新の未クローズセッションをクローズ）
-- `GET /me/attendance?month=2025-10` 自分の当月一覧+合計
-- `PATCH /me/attendance/today` 当日打刻の自己修正（当日中のみ）
-- `GET /admin/users?q=` ユーザー検索（admin）
-- `GET /admin/users/:id/attendance?month=YYYY-MM` 指定ユーザーの月次
-- `PATCH /admin/attendance/:attendance_id` 管理修正
-- `GET /admin/export?month=YYYY-MM` 月次CSVダウンロード
+## Deploy on Vercel
 
-## 5. バリデーション / ビジネスルール（MVP）
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-- 同一ユーザーは**同時に2つの未クローズセッションを持てない**。
-- 退勤は**直近の未クローズセッション**に対してのみ可。
-- 自己修正は**当日中1回まで**（以降は管理者対応）。
-- 1セッションの実働は `max(0, (clock_out - clock_in) - break)` 分で算出。
-- 月次合計は日別合計の単純和（MVP）。
-
-## 6. 非機能要件
-
-- **セキュリティ**: パスワードはbcrypt等でハッシュ。セッション管理（HTTPOnly/SameSite Cookie推奨）。CSRF対策（フォームトークン）。
-- **設定情報**: `.env` で管理（例）
-    
-    ```
-    MONGODB_URI=mongodb+srv://...
-    MONGODB_DB=attendance_app
-    SECRET_KEY=change_me
-    TZ=Asia/Tokyo
-    ```
-    
-- **ログ**: 重要操作は `audit_logs` に記録。
-- **パフォーマンス**: 月次集計で必要なフィールドにインデックス。N+1相当の無駄クエリ回避。
-- **可用性**: 開発中は単一プロセスでOK。将来はAtlasと接続プール設定を検討。
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
