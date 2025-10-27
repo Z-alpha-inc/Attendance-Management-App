@@ -1,4 +1,3 @@
-// src/lib/jwt.ts
 import { SignJWT, jwtVerify } from "jose";
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || "dev_secret");
@@ -14,5 +13,5 @@ export async function signAccessToken(payload: Record<string, any>) {
 
 export async function verifyAccessToken(token: string) {
   const { payload } = await jwtVerify(token, secret);
-  return payload; // { sub, role, exp, ... }
+  return payload;
 }

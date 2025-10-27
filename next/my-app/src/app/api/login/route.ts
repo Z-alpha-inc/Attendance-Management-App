@@ -31,7 +31,6 @@ export async function POST(req: Request) {
   }
 }
 
-// GETで来たらガイド（任意）
 export function GET() {
   return NextResponse.json({ hint: "POST { email, password }" }, { status: 405 });
 }
