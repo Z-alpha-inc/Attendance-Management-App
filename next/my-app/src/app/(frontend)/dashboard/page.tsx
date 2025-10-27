@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
-import { minutesToHHMM } from "@/lib/time";
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
+import { minutesToHHMM } from '@/lib/time';
 
 type Me = {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "employee";
+  role: 'admin' | 'employee';
 };
 
 type TodayRes = {
-  status: "open" | "closed" | "none";
+  status: 'open' | 'closed' | 'none';
   clock_in?: string | null;
   clock_out?: string | null;
   workedMinutes?: number | null;
@@ -25,36 +25,36 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
 
   function ensureAuth() {
-    if (typeof window === "undefined") return;
-    const token = localStorage.getItem("token");
-    if (!token) window.location.href = "/login";
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = '/login';
   }
 
   async function loadMe() {
-    const data = await apiFetch<{ user: Me }>("/api/me");
+    const data = await apiFetch<{ user: Me }>('/api/me');
     setMe(data.user);
   }
 
   async function loadToday() {
-    const data = await apiFetch<TodayRes>("/api/me/attendance/today");
+    const data = await apiFetch<TodayRes>('/api/me/attendance/today');
     setToday(data);
   }
 
   useEffect(() => {
     ensureAuth();
     Promise.all([loadMe(), loadToday()]).catch((e) => {
-      alert(e.message || "読み込み失敗");
-      if (typeof window !== "undefined") window.location.href = "/login";
+      alert(e.message || '読み込み失敗');
+      if (typeof window !== 'undefined') window.location.href = '/login';
     });
   }, []);
 
   async function clockIn() {
     try {
       setLoading(true);
-      await apiFetch("/api/attendance/clock-in", { method: "POST" });
+      await apiFetch('/api/attendance/clock-in', { method: 'POST' });
       await loadToday();
     } catch (e: any) {
-      alert(e.message || "出勤に失敗しました");
+      alert(e.message || '出勤に失敗しました');
     } finally {
       setLoading(false);
     }
@@ -63,19 +63,19 @@ export default function DashboardPage() {
   async function clockOut() {
     try {
       setLoading(true);
-      await apiFetch("/api/attendance/clock-out", { method: "POST" });
+      await apiFetch('/api/attendance/clock-out', { method: 'POST' });
       await loadToday();
     } catch (e: any) {
-      alert(e.message || "退勤に失敗しました");
+      alert(e.message || '退勤に失敗しました');
     } finally {
       setLoading(false);
     }
   }
 
   function logout() {
-    if (typeof window === "undefined") return;
-    localStorage.removeItem("token");
-    window.location.href = "/login";
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('token');
+    window.location.href = '/login';
   }
 
   const worked = minutesToHHMM(today?.workedMinutes);
@@ -86,7 +86,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-xl font-bold">ダッシュボード</h1>
           <p className="text-sm text-gray-500">
-            {me ? `${me.name}（${me.role}）` : "読み込み中..."}
+            {me ? `${me.name}（${me.role}）` : '読み込み中...'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -99,9 +99,9 @@ export default function DashboardPage() {
           </Link>
 
           {/* 管理画面（管理者のみ） */}
-          {me?.role === "admin" && (
+          {me?.role === 'admin' && (
             <Link
-              href="/admin/users"  // ← ここを /admin/users に修正
+              href="/admin/users" // ← ここを /admin/users に修正
               className="px-3 py-2 rounded bg-purple-600 text-white text-sm"
             >
               管理画面
@@ -120,7 +120,7 @@ export default function DashboardPage() {
       <section className="border rounded p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div>今日のステータス</div>
-          <div className="font-semibold">{today?.status ?? "-"}</div>
+          <div className="font-semibold">{today?.status ?? '-'}</div>
         </div>
 
         <div className="flex items-center justify-between text-sm text-gray-600">
@@ -129,7 +129,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="mt-2 flex gap-2">
-          {today?.status !== "open" && (
+          {today?.status !== 'open' && (
             <button
               onClick={clockIn}
               disabled={loading}
@@ -138,7 +138,7 @@ export default function DashboardPage() {
               出勤
             </button>
           )}
-          {today?.status === "open" && (
+          {today?.status === 'open' && (
             <button
               onClick={clockOut}
               disabled={loading}

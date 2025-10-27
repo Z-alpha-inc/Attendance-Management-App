@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongoose";
-import { requireAuth, requireAdmin } from "@/lib/auth";
-import { Attendance } from "@/models/Attendance";
-import mongoose from "mongoose";
+import { NextResponse } from 'next/server';
+import { connectDB } from '@/lib/mongoose';
+import { requireAuth, requireAdmin } from '@/lib/auth';
+import { Attendance } from '@/models/Attendance';
+import mongoose from 'mongoose';
 
 export async function GET(req: Request) {
   try {
@@ -11,18 +11,24 @@ export async function GET(req: Request) {
     requireAdmin(payload);
 
     const { searchParams } = new URL(req.url);
-    const userId = searchParams.get("userId") || "";
-    const month = searchParams.get("month") || new Date().toISOString().slice(0, 7); // "YYYY-MM"
+    const userId = searchParams.get('userId') || '';
+    const month =
+      searchParams.get('month') || new Date().toISOString().slice(0, 7); // "YYYY-MM"
 
     if (!userId) {
-      return NextResponse.json({ error: "userId is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: 'userId is required' },
+        { status: 400 }
+      );
     }
 
     const uid = new mongoose.Types.ObjectId(userId);
     const prefix = `${month}-`; // e.g. "2025-10-"
 
-    const docs = await Attendance
-      .find({ user_id: uid, date_key: { $regex: `^${prefix}` } })
+    const docs = await Attendance.find({
+      user_id: uid,
+      date_key: { $regex: `^${prefix}` },
+    })
       .sort({ date_key: 1 })
       .lean();
 
@@ -41,12 +47,16 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({
-      userId, month,
+      userId,
+      month,
       totalMinutes: total,
       totalHours: Math.round((total / 60) * 100) / 100,
       records,
     });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: e?.message ?? 'Server error' },
+      { status: 500 }
+    );
   }
 }

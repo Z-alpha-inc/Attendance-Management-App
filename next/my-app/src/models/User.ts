@@ -1,7 +1,7 @@
 // src/models/User.ts
-import { Schema, model, models, type Types, type Model } from "mongoose";
+import { Schema, model, models, type Types, type Model } from 'mongoose';
 
-export type UserRole = "admin" | "employee";
+export type UserRole = 'admin' | 'employee';
 
 export interface IUserDB {
   _id: Types.ObjectId;
@@ -36,8 +36,8 @@ const UserSchema = new Schema<IUserDB>(
     },
     role: {
       type: String,
-      enum: ["admin", "employee"],
-      default: "employee",
+      enum: ['admin', 'employee'],
+      default: 'employee',
       required: true,
     },
     self_correction_date: {
@@ -46,8 +46,8 @@ const UserSchema = new Schema<IUserDB>(
     },
   },
   {
-    collection: "users",
-    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+    collection: 'users',
+    timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
 
     toJSON: {
       virtuals: true,
@@ -75,4 +75,4 @@ const UserSchema = new Schema<IUserDB>(
 UserSchema.index({ email: 1 }, { unique: true });
 
 export const User: Model<IUserDB> =
-  (models.User as Model<IUserDB>) || model<IUserDB>("User", UserSchema);
+  (models.User as Model<IUserDB>) || model<IUserDB>('User', UserSchema);

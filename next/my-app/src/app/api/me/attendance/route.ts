@@ -1,9 +1,9 @@
 // src/app/api/me/attendance/route.ts
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongoose";
-import { requireAuth } from "@/lib/auth";
-import { Attendance } from "@/models/Attendance";
-import mongoose from "mongoose";
+import { NextResponse } from 'next/server';
+import { connectDB } from '@/lib/mongoose';
+import { requireAuth } from '@/lib/auth';
+import { Attendance } from '@/models/Attendance';
+import mongoose from 'mongoose';
 
 export async function GET(req: Request) {
   try {
@@ -12,11 +12,14 @@ export async function GET(req: Request) {
     const userId = new mongoose.Types.ObjectId(payload.sub);
 
     const { searchParams } = new URL(req.url);
-    const month = searchParams.get("month") || new Date().toISOString().slice(0, 7); // "YYYY-MM"
+    const month =
+      searchParams.get('month') || new Date().toISOString().slice(0, 7); // "YYYY-MM"
     const prefix = `${month}-`; // 例: "2025-10-"
 
-    const docs = await Attendance
-      .find({ user_id: userId, date_key: { $regex: `^${prefix}` } })
+    const docs = await Attendance.find({
+      user_id: userId,
+      date_key: { $regex: `^${prefix}` },
+    })
       .sort({ date_key: 1 })
       .lean();
 
@@ -39,6 +42,9 @@ export async function GET(req: Request) {
       records,
     });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: e?.message ?? 'Server error' },
+      { status: 500 }
+    );
   }
 }

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 // すぐ自動リダイレクトしたいなら↓を使う
 // import { useRouter } from "next/navigation";
 
@@ -10,8 +10,8 @@ export default function HomePage() {
   // const router = useRouter();
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const t = localStorage.getItem("token");
+    if (typeof window === 'undefined') return;
+    const t = localStorage.getItem('token');
     setHasToken(!!t);
 
     // ★ログイン済みなら自動でダッシュボードへ飛ばしたい場合は以下をON

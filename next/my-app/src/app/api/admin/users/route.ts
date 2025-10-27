@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongoose";
-import { requireAuth, requireAdmin } from "@/lib/auth";
-import { User } from "@/models/User";
+import { NextResponse } from 'next/server';
+import { connectDB } from '@/lib/mongoose';
+import { requireAuth, requireAdmin } from '@/lib/auth';
+import { User } from '@/models/User';
 
 export async function GET(req: Request) {
   try {
@@ -10,29 +10,42 @@ export async function GET(req: Request) {
     requireAdmin(payload);
 
     const { searchParams } = new URL(req.url);
-    const q = (searchParams.get("q") || "").trim();
-    const role = searchParams.get("role") || "";
-    const page = Math.max(1, Number(searchParams.get("page") || "1"));
-    const limit = Math.min(50, Math.max(1, Number(searchParams.get("limit") || "20")));
+    const q = (searchParams.get('q') || '').trim();
+    const role = searchParams.get('role') || '';
+    const page = Math.max(1, Number(searchParams.get('page') || '1'));
+    const limit = Math.min(
+      50,
+      Math.max(1, Number(searchParams.get('limit') || '20'))
+    );
     const filter: any = {};
 
     if (q) {
       filter.$or = [
-        { name:  { $regex: q, $options: "i" } },
-        { email: { $regex: q, $options: "i" } },
+        { name: { $regex: q, $options: 'i' } },
+        { email: { $regex: q, $options: 'i' } },
       ];
     }
     if (role) filter.role = role;
 
     const [items, total] = await Promise.all([
-      User.find(filter).sort({ created_at: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      User.find(filter)
+        .sort({ created_at: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
       User.countDocuments(filter),
     ]);
 
     return NextResponse.json({
-      page, limit, total, items,
+      page,
+      limit,
+      total,
+      items,
     });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: e?.message ?? 'Server error' },
+      { status: 500 }
+    );
   }
 }
