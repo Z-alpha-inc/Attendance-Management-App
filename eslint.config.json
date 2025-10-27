@@ -1,0 +1,134 @@
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { FlatCompat } from '@eslint/eslintrc';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
+
+const eslintConfig = [
+  ...compat.extends('next/core-web-vitals', 'next/typescript'),
+  {
+    // 除外するファイル・ディレクトリを指定
+    ignores: [
+      '.next/**',
+      'node_modules/**',
+      'public/sw.js',
+      'public/workbox-*.js',
+      '**/*.d.ts',
+      'out/**',
+      'build/**',
+      'dist/**',
+      'scripts/**/*.js', // JavaScriptスクリプトファイルを除外
+      'tailwind.config.ts', // 設定ファイルでrequireが必要な場合
+    ],
+  },
+  {
+    rules: {
+      // クォートはシングルクォートを強制
+      quotes: ['error', 'single', { avoidEscape: true }],
+
+      // 文末にセミコロンを強制
+      semi: ['error', 'always'],
+
+      // 未使用のインポートを禁止
+      'no-unused-vars': 'off', // TypeScriptの場合は@typescript-eslint/no-unused-varsを使用
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
+
+      // TypeScript関連のルールを緩和
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-empty-object-type': 'warn',
+      '@typescript-eslint/no-unsafe-function-type': 'warn',
+      '@typescript-eslint/no-require-imports': 'off',
+
+      // 1行あたりの最大文字数を制限
+      'max-len': [
+        'warn',
+        {
+          code: 120,
+          tabWidth: 2,
+          ignoreUrls: true,
+          ignoreStrings: true,
+          ignoreTemplateLiterals: true,
+          ignoreRegExpLiterals: true,
+          ignoreComments: true,
+        },
+      ],
+
+      // インデントを2スペースに統一
+      indent: ['error', 2, { SwitchCase: 1 }],
+
+      // 末尾のカンマを強制（配列、オブジェクトの最後の要素）
+      'comma-dangle': ['error', 'always-multiline'],
+
+      // オブジェクトのキーと値の間のスペースを統一
+      'key-spacing': ['error', { beforeColon: false, afterColon: true }],
+
+      // 演算子の前後にスペースを強制
+      'space-infix-ops': 'error',
+
+      // キーワードの前後にスペースを強制
+      'keyword-spacing': 'error',
+
+      // 関数の括弧の前のスペースルール
+      'space-before-function-paren': [
+        'error',
+        {
+          anonymous: 'always',
+          named: 'never',
+          asyncArrow: 'always',
+        },
+      ],
+
+      // ブロック文の波括弧の前にスペースを強制
+      'space-before-blocks': 'error',
+
+      // 配列の括弧内のスペースを禁止
+      'array-bracket-spacing': ['error', 'never'],
+
+      // オブジェクトの波括弧内のスペースを強制
+      'object-curly-spacing': ['error', 'always'],
+
+      // 行末の空白を禁止
+      'no-trailing-spaces': 'error',
+
+      // ファイル末尾の改行を強制
+      'eol-last': ['error', 'always'],
+
+      // console.logを警告（開発時は許可、本番では削除推奨）
+      'no-console': 'warn',
+
+      // 重複したインポートを禁止
+      'no-duplicate-imports': 'error',
+
+      // var の使用を禁止（let/const を推奨）
+      'no-var': 'error',
+
+      // const を優先
+      'prefer-const': 'error',
+
+      // React関連のルールを緩和
+      'react/display-name': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+
+      // Next.js関連のルールを緩和
+      '@next/next/no-img-element': 'warn',
+      '@next/next/no-async-client-component': 'warn',
+
+      // JSX関連
+      'jsx-a11y/alt-text': 'warn',
+    },
+  },
+];
+
+export default eslintConfig;
