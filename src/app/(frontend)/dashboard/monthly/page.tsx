@@ -183,7 +183,7 @@ export default function MonthlyPage() {
 
       {/* 一覧 */}
       <div className="border rounded overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm ">
           <thead className="bg-gray-700">
             <tr>
               <th className="text-left px-3 py-2">日付</th>
@@ -196,11 +196,11 @@ export default function MonthlyPage() {
           <tbody>
             {(data?.records ?? []).map((r) => (
               <tr key={r.date_key} className="border-t">
-                <td className="px-3 py-2">{r.date_key}</td>
+                <td className="px-3 py-2 text-white">{r.date_key}</td>
                 <td className="px-3 py-2">
                   <span
                     className={
-                      r.status === 'closed' ? 'text-green-700' : 'text-gray-600'
+                      r.status === 'closed' ? 'text-red-700' : 'text-green-600'
                     }
                   >
                     {r.status}

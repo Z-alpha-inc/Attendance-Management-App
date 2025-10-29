@@ -28,7 +28,7 @@ export async function GET(req: Request) {
       const minutes = d.workedMinutes ?? 0;
       total += minutes;
       return {
-        date: d.date_key,
+        date_key: d.date_key,
         workedMinutes: minutes,
         workedHours: Math.round((minutes / 60) * 100) / 100,
         status: d.status,

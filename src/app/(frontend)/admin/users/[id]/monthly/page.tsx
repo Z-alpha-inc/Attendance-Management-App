@@ -1,11 +1,12 @@
 'use client';
-
+import { use, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { minutesToHHMM } from '@/lib/time';
 
+// 1日分 + ★_id を追加（編集に必要）
 type DayRecord = {
+  _id: string;
   date_key: string;
   status: 'open' | 'closed';
   workedMinutes: number | null;
@@ -27,22 +28,24 @@ function shiftMonth(yyyyMM: string, diff: number) {
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   return `${yy}-${mm}`;
 }
-
 function initialMonth() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }
 
+// ★ params を Promise で受け取り、use() で取り出す
 export default function AdminUserMonthlyPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const userId = params.id;
+  const { id: userId } = use(params); // ← これでOK
+
   const [month, setMonth] = useState(initialMonth());
   const [data, setData] = useState<MonthlyRes | null>(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
+  const [savingId, setSavingId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -65,7 +68,7 @@ export default function AdminUserMonthlyPage({
     setLoading(true);
     setErr('');
     try {
-      // 期待API: GET /api/admin/attendance?userId=...&month=YYYY-MM
+      // GET /api/admin/attendance?userId=...&month=YYYY-MM
       const res = await apiFetch<MonthlyRes>(
         `/api/admin/attendance?userId=${userId}&month=${month}`
       );
@@ -74,6 +77,29 @@ export default function AdminUserMonthlyPage({
       setErr(e?.message || '読み込み失敗');
     } finally {
       setLoading(false);
+    }
+  }
+
+  // ★編集API: PUT /api/admin/attendance/[id] に record._id を使う
+  async function quickEditWorkedMinutes(recordId: string) {
+    const input = window.prompt('勤務分（分）を整数で入力してください');
+    if (input == null) return;
+    const mins = Number(input);
+    if (!Number.isFinite(mins) || mins < 0) {
+      alert('0以上の数字を入力してください');
+      return;
+    }
+    try {
+      setSavingId(recordId);
+      await apiFetch(`/api/admin/attendance/${recordId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ workedMinutes: mins }),
+      });
+      await load();
+    } catch (e: any) {
+      alert(e?.message || '更新に失敗しました');
+    } finally {
+      setSavingId(null);
     }
   }
 
@@ -123,25 +149,22 @@ export default function AdminUserMonthlyPage({
 
       <div className="border rounded overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-700">
             <tr>
               <th className="text-left px-3 py-2">日付</th>
               <th className="text-left px-3 py-2">状態</th>
               <th className="text-right px-3 py-2">勤務時間</th>
               <th className="text-left px-3 py-2">出勤</th>
               <th className="text-left px-3 py-2">退勤</th>
+              <th className="text-left px-3 py-2">編集</th>
             </tr>
           </thead>
           <tbody>
             {(data?.records ?? []).map((r) => (
-              <tr key={r.date_key} className="border-t">
+              <tr key={r._id} className="border-t">
                 <td className="px-3 py-2">{r.date_key}</td>
                 <td className="px-3 py-2">
-                  <span
-                    className={
-                      r.status === 'closed' ? 'text-green-700' : 'text-gray-600'
-                    }
-                  >
+                  <span className={r.status === 'closed' ? 'text-red-700' : 'text-green-600'}>
                     {r.status}
                   </span>
                 </td>
@@ -150,25 +173,28 @@ export default function AdminUserMonthlyPage({
                 </td>
                 <td className="px-3 py-2">
                   {r.clock_in
-                    ? new Date(r.clock_in).toLocaleTimeString('ja-JP', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
+                    ? new Date(r.clock_in).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
                     : '-'}
                 </td>
                 <td className="px-3 py-2">
                   {r.clock_out
-                    ? new Date(r.clock_out).toLocaleTimeString('ja-JP', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
+                    ? new Date(r.clock_out).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
                     : '-'}
+                </td>
+                <td className="px-3 py-2">
+                  <button
+                    onClick={() => quickEditWorkedMinutes(r._id)}
+                    disabled={savingId === r._id}
+                    className="px-3 py-1 rounded bg-blue-600 text-white disabled:opacity-50"
+                  >
+                    {savingId === r._id ? '保存中...' : '勤務分を編集'}
+                  </button>
                 </td>
               </tr>
             ))}
             {(!data?.records || data.records.length === 0) && (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-gray-500">
+                <td colSpan={6} className="px-3 py-6 text-center text-gray-500">
                   レコードがありません
                 </td>
               </tr>

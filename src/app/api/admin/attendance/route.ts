@@ -37,7 +37,8 @@ export async function GET(req: Request) {
       const minutes = d.workedMinutes ?? 0;
       total += minutes;
       return {
-        date: d.date_key,
+        _id: String(d._id),
+        date_key: d.date_key,
         status: d.status,
         clock_in: d.clock_in,
         clock_out: d.clock_out,
@@ -54,9 +55,16 @@ export async function GET(req: Request) {
       records,
     });
   } catch (e: any) {
-    return NextResponse.json(
-      { error: e?.message ?? 'Server error' },
-      { status: 500 }
-    );
+    if (e instanceof Response) return e;
+    const status = typeof e?.status === 'number' ? e.status : 500;
+    const message =
+      typeof e?.message === 'string'
+        ? e.message
+        : status === 401
+        ? 'Unauthorized'
+        : status === 403
+        ? 'Forbidden'
+        : 'Server error';
+    return NextResponse.json({ error: message }, { status });
   }
 }
