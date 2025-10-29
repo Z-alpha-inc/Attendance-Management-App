@@ -85,7 +85,7 @@ export default function AdminUsersPage() {
       {!loading && (
         <div className="border rounded overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-gray-700">
               <tr>
                 <th className="text-left px-3 py-2">名前</th>
                 <th className="text-left px-3 py-2">メール</th>
@@ -129,7 +129,7 @@ export default function AdminUsersPage() {
         <div className="flex gap-2 justify-end">
           <button
             onClick={() => load(Math.max(1, page - 1), q)}
-            className="px-3 py-2 rounded bg-gray-100 hover:bg-gray-200"
+            className="px-3 py-2 rounded bg-gray-700 hover:bg-gray-200"
             disabled={page <= 1}
           >
             前へ
@@ -137,7 +137,7 @@ export default function AdminUsersPage() {
           <div className="px-2 py-2">Page {page}</div>
           <button
             onClick={() => load(page + 1, q)}
-            className="px-3 py-2 rounded bg-gray-100 hover:bg-gray-200"
+            className="px-3 py-2 rounded bg-gray-700 hover:bg-gray-200"
             disabled={page * data.limit >= data.total}
           >
             次へ

@@ -43,9 +43,20 @@ export async function GET(req: Request) {
       items,
     });
   } catch (e: any) {
-    return NextResponse.json(
-      { error: e?.message ?? 'Server error' },
-      { status: 500 }
-    );
+    // 認証/権限チェックでは Response(401/403) を throw しているため、それをそのまま返す
+    if (e instanceof Response) return e;
+
+    // e.status を持つ場合はそれに合わせて返す（例えば他レイヤーが status を付与する場合）
+    const status = typeof e?.status === 'number' ? e.status : 500;
+    const message =
+      typeof e?.message === 'string'
+        ? e.message
+        : status === 401
+        ? 'Unauthorized'
+        : status === 403
+        ? 'Forbidden'
+        : 'Server error';
+
+    return NextResponse.json({ error: message }, { status });
   }
 }
