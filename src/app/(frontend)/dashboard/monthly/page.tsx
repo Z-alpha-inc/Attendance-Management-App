@@ -194,8 +194,8 @@ export default function MonthlyPage() {
             </tr>
           </thead>
           <tbody>
-            {(data?.records ?? []).map((r) => (
-              <tr key={r.date_key} className="border-t">
+            {(data?.records ?? []).map((r, i) => (
+             <tr key={`${r.date_key}-${r.status}-${i}`} className="border-t">
                 <td className="px-3 py-2 text-white">{r.date_key}</td>
                 <td className="px-3 py-2">
                   <span

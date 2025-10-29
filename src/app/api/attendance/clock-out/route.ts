@@ -5,13 +5,15 @@ import { todayKeyJST } from '@/lib/date';
 import { Attendance } from '@/models/Attendance';
 import mongoose from 'mongoose';
 
-export async function POST(req: Request) {
+// 退勤は「更新」なので PUT にする
+export async function PUT(req: Request) {
   try {
     await connectDB();
     const payload = await requireAuth(req as any);
     const userId = new mongoose.Types.ObjectId(payload.sub);
     const date_key = todayKeyJST();
 
+    // 当日の open レコードを取得
     const open = await Attendance.findOne({
       user_id: userId,
       date_key,
@@ -47,3 +49,6 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// 互換を残したいなら（既存フロントが POST を叩いても動くように）
+export const POST = PUT;
