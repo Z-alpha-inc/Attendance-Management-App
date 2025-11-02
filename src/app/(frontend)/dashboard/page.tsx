@@ -1,18 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import toast, { Toaster } from 'react-hot-toast';
 
-// 日付の経過を hh:mm:ss に整形
+/** ms を hh:mm:ss に整形 */
 function formatElapsed(ms: number) {
-  const totalSec = Math.floor(ms / 1000);
-  const hours = Math.floor(totalSec / 3600);
-  const minutes = Math.floor((totalSec % 3600) / 60);
-  const seconds = totalSec % 60;
-  return `${hours.toString().padStart(2, '0')}:${minutes
+  const totalSec = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${h.toString().padStart(2, '0')}:${m
     .toString()
-    .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    .padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
 type Me = {
@@ -27,6 +28,10 @@ type TodayRes = {
   clock_in?: string | null;
   clock_out?: string | null;
   workedMinutes?: number | null;
+  totalBreakMinutes?: number | null;
+  isOnBreak?: boolean;
+  currentBreakStart?: string | null;
+  liveWorkedMs?: number | null;
 };
 
 export default function DashboardPage() {
@@ -34,105 +39,169 @@ export default function DashboardPage() {
   const [today, setToday] = useState<TodayRes | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const [elapsed, setElapsed] = useState<number>(0); // 経過ミリ秒
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [elapsedMs, setElapsedMs] = useState(0);
+  const [breakElapsedMs, setBreakElapsedMs] = useState(0);
 
-  // ==== 初期ロード ====
-  useEffect(() => {
-    ensureAuth();
-    Promise.all([loadMe(), loadToday()]).catch((e) => {
-      alert(e.message || '読み込み失敗');
-      if (typeof window !== 'undefined') window.location.href = '/login';
-    });
-  }, []);
+  const workTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const breakTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  function ensureAuth() {
+  // ===== タイマー制御 =====
+  const stopWorkTimer = () => {
+    if (workTimerRef.current) clearInterval(workTimerRef.current);
+    workTimerRef.current = null;
+  };
+
+  const stopBreakTimer = () => {
+    if (breakTimerRef.current) clearInterval(breakTimerRef.current);
+    breakTimerRef.current = null;
+  };
+
+  // 勤務経過タイマー
+  const startWorkTimer = (workedMs: number) => {
+    stopWorkTimer();
+    const origin = Date.now() - workedMs;
+    const tick = () => setElapsedMs(Date.now() - origin);
+    tick();
+    workTimerRef.current = setInterval(tick, 1000);
+  };
+
+  // 休憩経過タイマー
+  const startBreakTimer = (previousTotalMs: number, startIso: string) => {
+    stopBreakTimer();
+    const startMs = new Date(startIso).getTime();
+    const tick = () => {
+      const now = Date.now();
+      const current = previousTotalMs + (now - startMs);
+      setBreakElapsedMs(current);
+    };
+    tick();
+    breakTimerRef.current = setInterval(tick, 1000);
+  };
+
+  // ===== API通信 =====
+  const ensureAuth = () => {
     if (typeof window === 'undefined') return;
     const token = localStorage.getItem('token');
     if (!token) window.location.href = '/login';
-  }
+  };
 
-  async function loadMe() {
+  const loadMe = useCallback(async () => {
     const data = await apiFetch<{ user: Me }>('/api/me');
     setMe(data.user);
-  }
+  }, []);
 
-  async function loadToday() {
+  const loadToday = useCallback(async () => {
     const data = await apiFetch<TodayRes>('/api/me/attendance/today');
     setToday(data);
 
-    // 出勤中なら経過タイマーを開始
-    if (data.status === 'open' && data.clock_in) {
-      startTimer(new Date(data.clock_in).getTime());
+    stopWorkTimer();
+    stopBreakTimer();
+
+    // ---- 勤務時間 ----
+    const workedMs = Math.max(0, data.liveWorkedMs ?? (data.workedMinutes ?? 0) * 60_000);
+    if (data.status === 'open' && !data.isOnBreak) {
+      startWorkTimer(workedMs);
     } else {
-      stopTimer();
+      setElapsedMs(workedMs);
     }
-  }
 
-  // ==== 打刻機能 ====
+    // ---- 休憩時間 ----
+    const previousTotalMs = Math.max(0, (data.totalBreakMinutes ?? 0) * 60_000);
+    if (data.isOnBreak && data.currentBreakStart) {
+      startBreakTimer(previousTotalMs, data.currentBreakStart);
+    } else {
+      setBreakElapsedMs(previousTotalMs);
+    }
 
-  async function clockIn() {
+    // 通知
+    if (data.status === 'open') {
+      if (data.isOnBreak) toast('現在休憩中です ☕');
+      else toast.success('すでに出勤中です');
+    } else if (data.status === 'closed') {
+    }
+  }, []);
+
+  // ===== 初期ロード =====
+  useEffect(() => {
+    ensureAuth();
+    (async () => {
+      try {
+        await Promise.all([loadMe(), loadToday()]);
+      } catch (e: any) {
+        toast.error(e?.message || '読み込みに失敗しました');
+      }
+    })();
+    return () => {
+      stopWorkTimer();
+      stopBreakTimer();
+    };
+  }, [loadMe, loadToday]);
+
+  // ===== 打刻系 =====
+  const clockIn = async () => {
     try {
       setLoading(true);
       await apiFetch('/api/attendance/clock-in', { method: 'POST' });
+      toast.success('出勤しました！');
       await loadToday();
     } catch (e: any) {
-      alert(e.message || '出勤に失敗しました');
+      toast.error(e?.message || 'すでに出勤済みです');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  async function clockOut() {
+  const clockOut = async () => {
+    if (today?.isOnBreak) {
+      toast.error('先に休憩を終了してください');
+      return;
+    }
     try {
       setLoading(true);
       await apiFetch('/api/attendance/clock-out', { method: 'POST' });
+      toast.success('退勤しました！お疲れさまでした');
       await loadToday();
-      stopTimer(); // 退勤したらタイマー止める
     } catch (e: any) {
-      alert(e.message || '退勤に失敗しました');
+      toast.error(e?.message || '退勤に失敗しました');
     } finally {
       setLoading(false);
     }
-  }
+  };
 
-  function logout() {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem('token');
-    window.location.href = '/login';
-  }
-
-  // ==== タイマー関連 ====
-  function startTimer(clockInMs: number) {
-    stopTimer(); // 二重防止
-    const update = () => {
-      const now = Date.now();
-      setElapsed(now - clockInMs);
-    };
-    update();
-    intervalRef.current = setInterval(update, 1000); // 1秒ごとに更新
-  }
-
-  function stopTimer() {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+  const breakStart = async () => {
+    try {
+      setLoading(true);
+      await apiFetch('/api/attendance/break/start', { method: 'POST' });
+      await loadToday();
+    } catch (e: any) {
+      toast.error(e?.message || '休憩開始に失敗しました');
+    } finally {
+      setLoading(false);
     }
-    setElapsed(0);
-  }
+  };
 
-  const workedLabel =
-    today?.status === 'open' && today.clock_in
-      ? formatElapsed(elapsed)
-      : today?.workedMinutes
-      ? `${Math.floor(today.workedMinutes / 60)}:${String(
-          today.workedMinutes % 60
-        ).padStart(2, '0')}`
-      : '00:00:00';
+  const breakEnd = async () => {
+    try {
+      setLoading(true);
+      await apiFetch('/api/attendance/break/end', { method: 'POST' });
+      toast.success('休憩を終了しました');
+      await loadToday();
+    } catch (e: any) {
+      toast.error(e?.message || '休憩終了に失敗しました');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // ==== UI ====
+  // ===== 表示 =====
+  const workedLabel = formatElapsed(elapsedMs);
+  const breakLabel = formatElapsed(breakElapsedMs);
+  const cannotClockOut = today?.status === 'open' && !!today?.isOnBreak;
+
   return (
     <div className="max-w-md mx-auto p-6 space-y-6">
+      <Toaster position="top-center" reverseOrder={false} />
+
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold">ダッシュボード</h1>
@@ -140,25 +209,23 @@ export default function DashboardPage() {
             {me ? `${me.name}（${me.role}）` : '読み込み中...'}
           </p>
         </div>
+
         <div className="flex gap-2">
-          <Link
-            href="/dashboard/monthly"
-            className="px-3 py-2 rounded bg-blue-600 text-white text-sm"
-          >
+          <Link href="/dashboard/monthly" className="px-3 py-2 rounded bg-blue-600 text-white text-sm">
             当月一覧
           </Link>
 
           {me?.role === 'admin' && (
-            <Link
-              href="/admin/users"
-              className="px-3 py-2 rounded bg-purple-600 text-white text-sm"
-            >
+            <Link href="/admin/users" className="px-3 py-2 rounded bg-purple-600 text-white text-sm">
               管理画面
             </Link>
           )}
 
           <button
-            onClick={logout}
+            onClick={() => {
+              localStorage.removeItem('token');
+              window.location.href = '/login';
+            }}
             className="px-3 py-2 rounded bg-gray-200 text-gray-800 text-sm"
           >
             ログアウト
@@ -169,13 +236,27 @@ export default function DashboardPage() {
       <section className="border rounded p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div>今日のステータス</div>
-          <div className="font-semibold">{today?.status ?? '-'}</div>
+          <div className="font-semibold">
+            {today?.status ?? '-'}
+            {today?.status === 'open' && today?.isOnBreak ? '（休憩中）' : ''}
+          </div>
         </div>
 
-        <div className="flex items-center justify-between text-sm text-white">
+        <div className="flex items-center justify-between text-sm">
           <div>勤務経過時間</div>
-          <div className="font-mono text-white">{workedLabel}</div>
+          <div className="font-mono">{workedLabel}</div>
         </div>
+
+        <div className="flex items-center justify-between text-sm text-orange-500">
+          <div>休憩経過時間（累計）</div>
+          <div className="font-mono">{breakLabel}</div>
+        </div>
+
+        {cannotClockOut && (
+          <p className="text-xs text-red-600">
+            休憩中は退勤できません。
+          </p>
+        )}
 
         <div className="mt-2 flex gap-2">
           {today?.status !== 'open' && (
@@ -187,14 +268,38 @@ export default function DashboardPage() {
               出勤
             </button>
           )}
+
           {today?.status === 'open' && (
-            <button
-              onClick={clockOut}
-              disabled={loading}
-              className="bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50"
-            >
-              退勤
-            </button>
+            <>
+              {!today?.isOnBreak ? (
+                <button
+                  onClick={breakStart}
+                  disabled={loading}
+                  className="bg-orange-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                >
+                  休憩開始
+                </button>
+              ) : (
+                <button
+                  onClick={breakEnd}
+                  disabled={loading}
+                  className="bg-yellow-600 text-white px-4 py-2 rounded disabled:opacity-50"
+                >
+                  休憩終了
+                </button>
+              )}
+
+              <button
+                onClick={clockOut}
+                disabled={loading || cannotClockOut}
+                title={cannotClockOut ? '休憩中は退勤できません。先に「休憩終了」を押してください。' : ''}
+                className={`bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50 ${
+                  cannotClockOut ? 'cursor-not-allowed' : ''
+                }`}
+              >
+                退勤
+              </button>
+            </>
           )}
         </div>
       </section>

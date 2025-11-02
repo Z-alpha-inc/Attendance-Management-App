@@ -5,13 +5,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { apiFetch } from '@/lib/api';
 import { minutesToHHMM } from '@/lib/time';
 
-// 1日分のレコード
+// 1日分のレコード（← 休憩合計を追加）
 type DayRecord = {
-  date_key: string; // "2025-10-26"
-  status: 'open' | 'closed'; // その日の最終状態
-  workedMinutes: number | null;
-  clock_in?: string | null; // ISO文字列
-  clock_out?: string | null; // ISO文字列
+  date_key: string;                // "2025-10-26"
+  status: 'open' | 'closed';
+  workedMinutes: number | null;    // 実働合計（分）
+  totalBreakMinutes?: number | null; // 休憩合計（分）← 追加
+  clock_in?: string | null;
+  clock_out?: string | null;
 };
 
 // APIレスポンス
@@ -39,6 +40,18 @@ function readMonthFromLocation(): string {
   return `${y}-${m}`;
 }
 
+// 出勤/退勤の時刻表示（JST固定・未設定は "-"）
+function timeHHMMJST(iso?: string | null) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  return d.toLocaleTimeString('ja-JP', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Tokyo',
+  });
+}
+
 export default function MonthlyPage() {
   const [month, setMonth] = useState<string>(''); // 表示対象の YYYY-MM
   const [data, setData] = useState<MonthlyRes | null>(null);
@@ -50,10 +63,17 @@ export default function MonthlyPage() {
     setMonth(readMonthFromLocation());
   }, []);
 
-  // 合計分をメモ化
-  const totalMinutes = useMemo(() => {
+  // 合計（実働・休憩）をメモ化
+  const totalWorked = useMemo(() => {
     return (data?.records ?? []).reduce(
       (sum, r) => sum + (r.workedMinutes ?? 0),
+      0
+    );
+  }, [data]);
+
+  const totalBreak = useMemo(() => {
+    return (data?.records ?? []).reduce(
+      (sum, r) => sum + (r.totalBreakMinutes ?? 0),
       0
     );
   }, [data]);
@@ -173,11 +193,19 @@ export default function MonthlyPage() {
         <div className="font-mono text-lg">{data?.month || month}</div>
       </div>
 
-      {/* 合計 */}
-      <div className="border rounded p-4">
-        <div className="flex items-center justify-between">
-          <div>合計勤務時間</div>
-          <div className="font-mono">{minutesToHHMM(totalMinutes)}</div>
+      {/* 合計（実働・休憩） */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="border rounded p-4">
+          <div className="flex items-center justify-between">
+            <div>合計勤務時間</div>
+            <div className="font-mono">{minutesToHHMM(totalWorked)}</div>
+          </div>
+        </div>
+        <div className="border rounded p-4">
+          <div className="flex items-center justify-between">
+            <div>合計休憩時間</div>
+            <div className="font-mono">{minutesToHHMM(totalBreak)}</div>
+          </div>
         </div>
       </div>
 
@@ -189,13 +217,14 @@ export default function MonthlyPage() {
               <th className="text-left px-3 py-2">日付</th>
               <th className="text-left px-3 py-2">状態</th>
               <th className="text-right px-3 py-2">勤務時間</th>
+              <th className="text-right px-3 py-2">休憩時間</th>{/* ← 追加 */}
               <th className="text-left px-3 py-2">出勤</th>
               <th className="text-left px-3 py-2">退勤</th>
             </tr>
           </thead>
           <tbody>
             {(data?.records ?? []).map((r, i) => (
-             <tr key={`${r.date_key}-${r.status}-${i}`} className="border-t">
+              <tr key={`${r.date_key}-${r.clock_in ?? ''}-${r.clock_out ?? ''}-${i}`} className="border-t">
                 <td className="px-3 py-2 text-white">{r.date_key}</td>
                 <td className="px-3 py-2">
                   <span
@@ -209,27 +238,16 @@ export default function MonthlyPage() {
                 <td className="px-3 py-2 text-right font-mono">
                   {minutesToHHMM(r.workedMinutes ?? 0)}
                 </td>
-                <td className="px-3 py-2">
-                  {r.clock_in
-                    ? new Date(r.clock_in).toLocaleTimeString('ja-JP', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
-                    : '-'}
+                <td className="px-3 py-2 text-right font-mono">
+                  {minutesToHHMM(r.totalBreakMinutes ?? 0)}
                 </td>
-                <td className="px-3 py-2">
-                  {r.clock_out
-                    ? new Date(r.clock_out).toLocaleTimeString('ja-JP', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })
-                    : '-'}
-                </td>
+                <td className="text-left px-3 py-2">{timeHHMMJST(r.clock_in)}</td>
+                <td className="text-left px-3 py-2">{timeHHMMJST(r.clock_out)}</td>
               </tr>
             ))}
             {(!data?.records || data.records.length === 0) && (
               <tr>
-                <td className="px-3 py-6 text-center text-gray-500" colSpan={5}>
+                <td className="px-3 py-6 text-center text-gray-500" colSpan={6}>
                   レコードがありません
                 </td>
               </tr>
