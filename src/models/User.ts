@@ -26,7 +26,7 @@ const UserSchema = new Schema<IUserDB>(
     email: {
       type: String,
       required: true,
-      unique: true,
+      unique: true,       // ← ココだけでユニークインデックスを張る
       lowercase: true,
       trim: true,
     },
@@ -48,31 +48,21 @@ const UserSchema = new Schema<IUserDB>(
   {
     collection: 'users',
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
-
     toJSON: {
       virtuals: true,
       versionKey: false,
-      transform(_doc, ret) {
-        // 型を安全に扱うために分割代入を使う
-        const { _id, password, ...rest } = ret as {
-          _id?: Types.ObjectId;
-          password?: string;
-          [key: string]: any;
-        };
-
+      transform(_doc, ret: Partial<IUserDB> & { _id?: Types.ObjectId; password?: string }) {
+        // _id と password を外し、id を string で返す
+        const { _id, password, ...rest } = ret;
         return {
           id: _id?.toHexString(),
           ...rest,
         };
       },
     },
-
     toObject: { virtuals: true },
   }
 );
-
-// email にユニークインデックスを作成（重複防止）
-UserSchema.index({ email: 1 }, { unique: true });
 
 export const User: Model<IUserDB> =
   (models.User as Model<IUserDB>) || model<IUserDB>('User', UserSchema);
