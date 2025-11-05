@@ -14,7 +14,11 @@ export async function POST(req: Request) {
     const date_key = todayKeyJST();
 
     const rec = await Attendance.findOne({ user_id: userId, date_key });
-    if (!rec) return NextResponse.json({ error: 'No attendance found' }, { status: 400 });
+    if (!rec)
+      return NextResponse.json(
+        { error: 'No attendance found' },
+        { status: 400 }
+      );
 
     // 前回の休憩が終わってなければ閉じる
     const last = rec.breaks[rec.breaks.length - 1];

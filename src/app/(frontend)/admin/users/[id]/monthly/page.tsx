@@ -164,7 +164,11 @@ export default function AdminUserMonthlyPage({
               <tr key={r._id} className="border-t">
                 <td className="px-3 py-2">{r.date_key}</td>
                 <td className="px-3 py-2">
-                  <span className={r.status === 'closed' ? 'text-red-700' : 'text-green-600'}>
+                  <span
+                    className={
+                      r.status === 'closed' ? 'text-red-700' : 'text-green-600'
+                    }
+                  >
                     {r.status}
                   </span>
                 </td>
@@ -173,12 +177,18 @@ export default function AdminUserMonthlyPage({
                 </td>
                 <td className="px-3 py-2">
                   {r.clock_in
-                    ? new Date(r.clock_in).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+                    ? new Date(r.clock_in).toLocaleTimeString('ja-JP', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
                     : '-'}
                 </td>
                 <td className="px-3 py-2">
                   {r.clock_out
-                    ? new Date(r.clock_out).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' })
+                    ? new Date(r.clock_out).toLocaleTimeString('ja-JP', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
                     : '-'}
                 </td>
                 <td className="px-3 py-2">

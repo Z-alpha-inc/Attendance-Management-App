@@ -48,7 +48,10 @@ export function minutesToHHMM(mins: number | null | undefined): string {
  * ================================ */
 
 /** 勤務総時間（出勤～退勤） */
-export function totalWorkMs(clockIn: Date | string, clockOutOrNow: Date | string): number {
+export function totalWorkMs(
+  clockIn: Date | string,
+  clockOutOrNow: Date | string
+): number {
   const s = toMs(clockIn);
   const e = toMs(clockOutOrNow);
   return clampMs(e - s);

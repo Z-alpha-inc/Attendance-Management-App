@@ -61,10 +61,10 @@ export async function GET(req: Request) {
       typeof e?.message === 'string'
         ? e.message
         : status === 401
-        ? 'Unauthorized'
-        : status === 403
-        ? 'Forbidden'
-        : 'Server error';
+          ? 'Unauthorized'
+          : status === 403
+            ? 'Forbidden'
+            : 'Server error';
     return NextResponse.json({ error: message }, { status });
   }
 }

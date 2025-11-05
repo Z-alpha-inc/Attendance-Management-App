@@ -14,7 +14,10 @@ export async function POST(req: Request) {
 
     const rec = await Attendance.findOne({ user_id: userId, date_key });
     if (!rec) {
-      return NextResponse.json({ error: 'No attendance found' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'No attendance found' },
+        { status: 400 }
+      );
     }
 
     // 最後の休憩を閉じる
@@ -36,7 +39,11 @@ export async function POST(req: Request) {
 
     // 実働時間（休憩控除後）も更新
     if (rec.clock_in) {
-      rec.workedMinutes = workingMinutesExcludingBreaks(rec.clock_in, new Date(), rec.breaks);
+      rec.workedMinutes = workingMinutesExcludingBreaks(
+        rec.clock_in,
+        new Date(),
+        rec.breaks
+      );
     }
 
     await rec.save();

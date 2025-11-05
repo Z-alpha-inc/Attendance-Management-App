@@ -13,17 +13,17 @@ export async function POST(req: Request) {
 
     const date_key = todayKeyJST();
 
-    // 既に“open”があるか確認（当日二重出勤を防止）
-    const open = await Attendance.findOne({
-      user_id: userId,
-      date_key,
-      status: 'open',
-    });
-    if (open) {
-      return NextResponse.json(
-        { error: 'Already clocked-in today' },
-        { status: 400 }
-      );
+    // 同日レコードが1件でもあれば禁止（open/closed問わず）
+    const exists = await Attendance.findOne({ user_id: userId, date_key })
+      .select('status')
+      .lean();
+
+    if (exists) {
+      const msg =
+        exists.status === 'closed'
+          ? '本日はすでに退勤済みです'
+          : '本日は既に打刻されています';
+      return NextResponse.json({ error: msg }, { status: 400 });
     }
 
     const now = new Date();
@@ -42,6 +42,13 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (e: any) {
+    if (e?.code === 11000) {
+      // 競合（ユニーク制約がある場合）
+      return NextResponse.json(
+        { error: '本日はすでに打刻済みです' },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { error: e?.message ?? 'Server error' },
       { status: 500 }

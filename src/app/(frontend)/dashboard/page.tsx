@@ -98,7 +98,10 @@ export default function DashboardPage() {
     stopBreakTimer();
 
     // ---- 勤務時間 ----
-    const workedMs = Math.max(0, data.liveWorkedMs ?? (data.workedMinutes ?? 0) * 60_000);
+    const workedMs = Math.max(
+      0,
+      data.liveWorkedMs ?? (data.workedMinutes ?? 0) * 60_000
+    );
     if (data.status === 'open' && !data.isOnBreak) {
       startWorkTimer(workedMs);
     } else {
@@ -211,12 +214,18 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex gap-2">
-          <Link href="/dashboard/monthly" className="px-3 py-2 rounded bg-blue-600 text-white text-sm">
+          <Link
+            href="/dashboard/monthly"
+            className="px-3 py-2 rounded bg-blue-600 text-white text-sm"
+          >
             当月一覧
           </Link>
 
           {me?.role === 'admin' && (
-            <Link href="/admin/users" className="px-3 py-2 rounded bg-purple-600 text-white text-sm">
+            <Link
+              href="/admin/users"
+              className="px-3 py-2 rounded bg-purple-600 text-white text-sm"
+            >
               管理画面
             </Link>
           )}
@@ -253,9 +262,7 @@ export default function DashboardPage() {
         </div>
 
         {cannotClockOut && (
-          <p className="text-xs text-red-600">
-            休憩中は退勤できません。
-          </p>
+          <p className="text-xs text-red-600">休憩中は退勤できません。</p>
         )}
 
         <div className="mt-2 flex gap-2">
@@ -292,7 +299,11 @@ export default function DashboardPage() {
               <button
                 onClick={clockOut}
                 disabled={loading || cannotClockOut}
-                title={cannotClockOut ? '休憩中は退勤できません。先に「休憩終了」を押してください。' : ''}
+                title={
+                  cannotClockOut
+                    ? '休憩中は退勤できません。先に「休憩終了」を押してください。'
+                    : ''
+                }
                 className={`bg-red-600 text-white px-4 py-2 rounded disabled:opacity-50 ${
                   cannotClockOut ? 'cursor-not-allowed' : ''
                 }`}

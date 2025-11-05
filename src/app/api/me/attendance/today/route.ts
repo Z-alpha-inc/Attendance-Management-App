@@ -56,15 +56,15 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       date: date_key,
-      status: rec.status,                     // 'open' | 'closed'
+      status: rec.status, // 'open' | 'closed'
       clock_in: rec.clock_in ?? null,
       clock_out: rec.clock_out ?? null,
       workedMinutes: rec.workedMinutes ?? null, // closedなら分が入っている
       totalBreakMinutes: rec.totalBreakMinutes ?? 0,
       isOnBreak,
       currentBreakStart: currentBreak?.start ?? null, // ISO（NextResponseがシリアライズ）
-      liveWorkedMs,                               // ← 常に数値（ms）
-      liveBreakMs,                                // ← 常に数値（ms）
+      liveWorkedMs, // ← 常に数値（ms）
+      liveBreakMs, // ← 常に数値（ms）
     });
   } catch (e: any) {
     if (e instanceof Response) return e;
@@ -73,10 +73,10 @@ export async function GET(req: Request) {
       typeof e?.message === 'string'
         ? e.message
         : status === 401
-        ? 'Unauthorized'
-        : status === 403
-        ? 'Forbidden'
-        : 'Server error';
+          ? 'Unauthorized'
+          : status === 403
+            ? 'Forbidden'
+            : 'Server error';
     return NextResponse.json({ error: message }, { status });
   }
 }

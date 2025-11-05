@@ -20,7 +20,10 @@ export async function POST(req: Request) {
       status: 'open',
     });
     if (!open) {
-      return NextResponse.json({ error: 'No open record for today' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'No open record for today' },
+        { status: 400 }
+      );
     }
 
     const now = new Date();
@@ -46,6 +49,9 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ message: 'Clock-out OK', workedMinutes });
   } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? 'Server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: e?.message ?? 'Server error' },
+      { status: 500 }
+    );
   }
 }

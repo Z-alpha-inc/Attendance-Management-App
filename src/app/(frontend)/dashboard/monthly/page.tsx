@@ -7,9 +7,9 @@ import { minutesToHHMM } from '@/lib/time';
 
 // 1日分のレコード（← 休憩合計を追加）
 type DayRecord = {
-  date_key: string;                // "2025-10-26"
+  date_key: string; // "2025-10-26"
   status: 'open' | 'closed';
-  workedMinutes: number | null;    // 実働合計（分）
+  workedMinutes: number | null; // 実働合計（分）
   totalBreakMinutes?: number | null; // 休憩合計（分）← 追加
   clock_in?: string | null;
   clock_out?: string | null;
@@ -217,14 +217,18 @@ export default function MonthlyPage() {
               <th className="text-left px-3 py-2">日付</th>
               <th className="text-left px-3 py-2">状態</th>
               <th className="text-right px-3 py-2">勤務時間</th>
-              <th className="text-right px-3 py-2">休憩時間</th>{/* ← 追加 */}
+              <th className="text-right px-3 py-2">休憩時間</th>
+              {/* ← 追加 */}
               <th className="text-left px-3 py-2">出勤</th>
               <th className="text-left px-3 py-2">退勤</th>
             </tr>
           </thead>
           <tbody>
             {(data?.records ?? []).map((r, i) => (
-              <tr key={`${r.date_key}-${r.clock_in ?? ''}-${r.clock_out ?? ''}-${i}`} className="border-t">
+              <tr
+                key={`${r.date_key}-${r.clock_in ?? ''}-${r.clock_out ?? ''}-${i}`}
+                className="border-t"
+              >
                 <td className="px-3 py-2 text-white">{r.date_key}</td>
                 <td className="px-3 py-2">
                   <span
@@ -241,8 +245,12 @@ export default function MonthlyPage() {
                 <td className="px-3 py-2 text-right font-mono">
                   {minutesToHHMM(r.totalBreakMinutes ?? 0)}
                 </td>
-                <td className="text-left px-3 py-2">{timeHHMMJST(r.clock_in)}</td>
-                <td className="text-left px-3 py-2">{timeHHMMJST(r.clock_out)}</td>
+                <td className="text-left px-3 py-2">
+                  {timeHHMMJST(r.clock_in)}
+                </td>
+                <td className="text-left px-3 py-2">
+                  {timeHHMMJST(r.clock_out)}
+                </td>
               </tr>
             ))}
             {(!data?.records || data.records.length === 0) && (
