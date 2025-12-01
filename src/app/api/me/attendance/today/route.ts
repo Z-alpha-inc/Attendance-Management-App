@@ -46,13 +46,16 @@ export async function GET(req: Request) {
     const isOnBreak = !!currentBreak;
 
     // サーバで“今時点の実働ms/休憩ms”を数値(ms)で算出
-    const liveWorkedMs = rec.clock_in
-      ? workingMsExcludingBreaks(new Date(rec.clock_in), now, breaks)
-      : 0;
+    // open（出勤中）のときだけ、リアルタイムで実働時間を計算する
+    const liveWorkedMs =
+      rec.status === 'open' && rec.clock_in
+        ? workingMsExcludingBreaks(new Date(rec.clock_in), now, breaks)
+        : 0;
 
-    const liveBreakMs = currentBreak
-      ? Math.max(0, now.getTime() - new Date(currentBreak.start).getTime())
-      : 0;
+    const liveBreakMs =
+      rec.status === 'open' && currentBreak
+        ? Math.max(0, now.getTime() - new Date(currentBreak.start).getTime())
+        : 0;
 
     return NextResponse.json({
       date: date_key,

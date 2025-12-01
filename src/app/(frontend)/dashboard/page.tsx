@@ -98,10 +98,17 @@ export default function DashboardPage() {
     stopBreakTimer();
 
     // ---- 勤務時間 ----
-    const workedMs = Math.max(
-      0,
-      data.liveWorkedMs ?? (data.workedMinutes ?? 0) * 60_000
-    );
+    // 退勤済み（closed）の場合は、DB に保存された workedMinutes を必ず使う
+    // 出勤中（open）の場合のみ liveWorkedMs を優先してリアルタイム表示する
+    let workedMs = 0;
+    if (data.status === 'closed' && data.workedMinutes != null) {
+      workedMs = Math.max(0, data.workedMinutes * 60_000);
+    } else {
+      workedMs = Math.max(
+        0,
+        data.liveWorkedMs ?? (data.workedMinutes ?? 0) * 60_000
+      );
+    }
     if (data.status === 'open' && !data.isOnBreak) {
       startWorkTimer(workedMs);
     } else {
