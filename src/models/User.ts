@@ -26,7 +26,7 @@ const UserSchema = new Schema<IUserDB>(
     email: {
       type: String,
       required: true,
-      unique: true,       // ← ココだけでユニークインデックスを張る
+      unique: true, // ← ココだけでユニークインデックスを張る
       lowercase: true,
       trim: true,
     },
@@ -51,7 +51,10 @@ const UserSchema = new Schema<IUserDB>(
     toJSON: {
       virtuals: true,
       versionKey: false,
-      transform(_doc, ret: Partial<IUserDB> & { _id?: Types.ObjectId; password?: string }) {
+      transform(
+        _doc,
+        ret: Partial<IUserDB> & { _id?: Types.ObjectId; password?: string }
+      ) {
         // _id と password を外し、id を string で返す
         const { _id, password, ...rest } = ret;
         return {
