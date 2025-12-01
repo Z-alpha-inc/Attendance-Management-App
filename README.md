@@ -1,36 +1,119 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+0. ビジ側で事前に確認しておくポイント
+1.	ロール変更（admin付与）について(mongoatlasのattendance-db)
+	•	権限は MongoDB 上のユーザー情報で管理しています。
+	•	role: "employee" → role: "admin" に変更することで、管理者権限を付与できます。
+2.	管理画面の権限(/admin/users)
+	•	admin のみ 管理画面にアクセス可能です。
+	•	管理画面では以下ができます：
+	•	ユーザー検索
+	•	各ユーザーの打刻状況の確認
+	•	打刻時間の編集（出勤・退勤・休憩 など）
+	•	employee は自分の打刻を編集できません（閲覧のみ）。
+3.	出勤ボタンの仕様(/dashboard)
+	•	出勤打刻は 1日1回のみ 押すことができます。
+	•	同じ日に複数回の出勤打刻はできません。
+4.	ログアウトと出勤時刻の扱い
+	•	出勤後にログアウトしても、
+	•	「勤務中」である状態や
+	•	その日の出勤時刻の記録
+        はシステム上に保持されます。
+	•	そのため、ログアウトしても勤務時間のカウントには影響ありません。
+5.  誤打刻(/admin/attendance?userId=)
+    ・運用フロー例
+	1.	社員が誤打刻に気づく
+	2.	管理者にチャットやフォームで
+	•	日付
+	•	正しい時刻
+	•	修正してほしい内容
 
-## Getting Started
+⸻
 
-First, run the development server:
+1. 想定ユーザー
+	•	一般社員（employee）
+	•	出勤・退勤・休憩の打刻
+	•	自分の当月の打刻一覧の確認
+	•	管理者（admin）
+	•	ユーザー検索
+	•	各ユーザーの打刻データの確認・修正
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+⸻
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. ログイン / ログアウト
+	•	事前に メールアドレスとパスワードで新規登録 した上でログインします。
+	•	画面右上のメニューから 「ログアウト」 をクリックするとログアウトできます。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+⸻
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. 打刻の基本操作（社員）
 
-## Learn More
+3-1. 出勤打刻
+	1.	打刻画面を開く
+	2.	「出勤」ボタン を押す
+	3.	当日の出勤時刻が記録されます
 
-To learn more about Next.js, take a look at the following resources:
+制約
+	•	1日1回のみ出勤 できます
+	•	同じ日に二重で出勤打刻はできません
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3-2. 退勤打刻
+	1.	退勤時に打刻画面を開く
+	2.	「退勤」ボタン を押す
+	3.	当日の退勤時刻が記録されます
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+⸻
 
-## Deploy on Vercel
+4. 休憩打刻
+	1.	休憩に入るときに 「休憩開始」 を押す
+	2.	休憩から戻ったときに 「休憩終了」 を押す
+	3.	システム側で休憩時間が自動計算されます
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+仕様
+	•	休憩時間は 1分単位 で表示
+	•	秒数は 四捨五入 して計算されます
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+⸻
+
+5. 自分の当月打刻一覧の確認
+	1.	メニューから 「月次一覧」 を選択
+	2.	ログイン中のユーザーの 当月分の打刻データ が一覧表示されます
+
+表示内容の例：
+	•	日付
+	•	出勤時刻 / 退勤時刻
+	•	休憩時間
+	•	その日の合計勤務時間 など
+
+※ 他の社員の打刻は、一般社員からは閲覧できません（閲覧権限は管理者のみ）。
+
+⸻
+
+6. 誤打刻が発生した場合の運用
+
+現状の仕様
+	•	一般社員（employee）が 自分で打刻を修正することはできません
+	•	誤打刻の修正は 管理者（admin）が行う運用 です
+
+運用フロー例
+	1.	社員が誤打刻に気づく
+	2.	管理者にチャットやフォームで
+	•	日付
+	•	正しい時刻
+	•	修正してほしい内容
+を共有
+	3.	管理者が管理画面から該当データを修正
+	4.	社員が「月次一覧」で反映を確認
+
+⸻
+
+7. 管理者向け機能（admin）
+
+7-1. ユーザー検索
+	•	管理画面の 「ユーザー検索」 から、以下の情報で検索できます：
+	•	名前
+	•	メールアドレス など
+
+7-2. 打刻データの編集
+	1.	対象ユーザーを選択
+	2.	当月・対象月の一覧から該当日を選択
+	3.	出勤時間・退勤時間・休憩時間などを編集
+	4.	保存すると一覧に反映されます
